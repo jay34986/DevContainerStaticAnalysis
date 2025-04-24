@@ -1,0 +1,33 @@
+---
+name: Yamllint
+
+run-name: Yamllint
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - develop
+    paths:
+      - ".github/dependabot.yml"
+      - ".github/workflows/*.yml"
+      - "config/*.yml"
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  Yamllint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: "false"
+
+      - name: Running yamllint
+        run: yamllint -c config/yamllint_config.yml .github/workflows/*.yml config/*.yml

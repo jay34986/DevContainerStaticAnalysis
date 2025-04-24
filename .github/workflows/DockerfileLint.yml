@@ -1,0 +1,33 @@
+---
+name: Lint and Validate Dockerfile
+
+run-name: Linting and Validation Dockerfile on ${{ github.ref_name }}
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - develop
+    paths:
+      - ".devcontainer/Dockerfile"
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  Hadolint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: "false"
+
+      - name: Running hadolint
+        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf  # v3.1.0
+        with:
+          dockerfile: .devcontainer/Dockerfile

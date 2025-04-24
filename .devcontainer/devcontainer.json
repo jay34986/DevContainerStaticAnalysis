@@ -1,0 +1,40 @@
+{
+	"name": "StaticAnalysis",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"runArgs": [
+		"--name", "static-analysis",
+		"--hostname", "static-analysis"
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"amazonwebservices.aws-toolkit-vscode",
+				"aws-scripting-guy.cform",
+				"DavidAnson.vscode-markdownlint",
+				"exiasr.hadolint",
+				"github.vscode-github-actions",
+				"github.copilot",
+				"github.copilot-chat",
+				"kddejong.vscode-cfn-lint",
+				"mechatroner.rainbow-csv",
+				"ms-ceintl.vscode-language-pack-ja",
+				"redhat.vscode-yaml",
+				"timonwong.shellcheck"
+			],
+			"settings": {
+				"files.exclude": {
+					"**/.git": false
+				},
+				"markdownlint.config": {
+					"MD013": {
+						"line_length": 140,
+						"code_block_line_length": 140,
+						"tables": true
+					}
+				}
+			}
+		}
+	}
+}

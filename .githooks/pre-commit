@@ -1,0 +1,13 @@
+#!/bin/sh
+FILES=$(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g')
+[ -z "$FILES" ] && exit 0
+
+# Secretlint all selected files
+echo "$FILES" | xargs secretlint --secretlintrc=config/.secretlintrc.json --maskSecrets
+
+RET=$?
+if [ $RET -eq 0 ] ;then
+    exit 0
+else
+    exit 1
+fi

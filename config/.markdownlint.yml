@@ -1,0 +1,12 @@
+---
+# markdownlintの設定ファイル
+default: true
+
+# MD013/line-length - 行の長さ制限
+MD013:
+  # 行の最大長を140文字に設定
+  line_length: 140
+  # コードブロックでの行の長さ制限も140文字に設定
+  code_block_line_length: 140
+  # 表での行の長さ制限も140文字に設定
+  tables: true

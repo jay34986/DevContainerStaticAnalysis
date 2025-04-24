@@ -1,0 +1,51 @@
+---
+name: Build and Scan Docker Image with SBOM
+
+run-name: Build and Scan Docker Image with SBOM on ${{ github.ref_name }}
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - develop
+    paths:
+      - ".devcontainer/Dockerfile"
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: "false"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2  # v3.10.0
+
+      - name: Build Docker image
+        run: |
+          docker build -f .devcontainer/Dockerfile -t dev-container:test .
+
+      - name: Install Syft (SBOM generator)
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/v1.22.0/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Generate SBOM (CycloneDX format)
+        run: |
+          syft dev-container:test -o cyclonedx-json --scope squashed > sbom.json
+
+      - name: Install Grype (Vulnerability scanner)
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/v0.91.0/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Scan SBOM with Grype
+        run: |
+          grype --only-fixed sbom:sbom.json

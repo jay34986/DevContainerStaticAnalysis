@@ -1,0 +1,34 @@
+---
+name: Lint and Validate Markdown Files
+
+run-name: Linting and Validation Markdown Files on ${{ github.ref_name }}
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - develop
+    paths:
+      - "**/*.md"
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  MarkdownLint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: "false"
+
+      - name: Lint Markdown files
+        uses: DavidAnson/markdownlint-cli2-action@05f32210e84442804257b2a6f20b273450ec8265  # v19.1.0
+        with:
+          globs: '**/*.md'
+          config: config/.markdownlint.yml
