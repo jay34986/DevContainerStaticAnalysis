@@ -79,10 +79,12 @@ RUN python3.12 -m pip install --no-cache-dir pipx==1.7.1 && \
     python3.12 -m pipx ensurepath
 
 # Python関連ツールのインストール
-RUN pipx install cfn-lint==1.34.1 && \
-    pipx install yamllint==1.37.0 && \
+RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.34.1 && \
+    pipx install --pip-args='--no-cache-dir' yamllint==1.37.0 && \
     rm -rf /root/.local/pipx/logs/*
 
 # NPMパッケージのインストール（runtimeステージで実行）
 RUN npm install -g --omit=dev --no-progress markdownlint-cli2@0.17.2 && \
-    npm install -g --omit=dev --no-progress secretlint@9.3.1 @secretlint/secretlint-rule-preset-recommend@9.3.1
+    npm install -g --omit=dev --no-progress secretlint@9.3.1 @secretlint/secretlint-rule-preset-recommend@9.3.1 && \
+    npm cache clean --force && \
+    rm -rf /root/.npm/_logs
