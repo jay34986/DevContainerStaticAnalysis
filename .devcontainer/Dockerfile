@@ -26,7 +26,7 @@ RUN curl -L "https://github.com/hadolint/hadolint/releases/download/v2.12.0/hado
     chmod +x hadolint
 
 # shellcheckのダウンロード
-RUN curl -L "https://github.com/koalaman/shellcheck/releases/download/v0.8.0/shellcheck-v0.8.0.linux.aarch64.tar.xz" | tar xJv
+RUN curl -L "https://github.com/koalaman/shellcheck/releases/download/v0.10.0/shellcheck-v0.10.0.linux.aarch64.tar.xz" | tar xJv
 
 # 実行環境
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023.7.20250414.0-minimal
@@ -46,13 +46,13 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /tmp/tools/actionlint /usr/local/bin/
 COPY --from=builder /tmp/tools/ghalint /usr/local/bin/
 COPY --from=builder /tmp/tools/hadolint /usr/local/bin/
-COPY --from=builder /tmp/tools/shellcheck-v0.8.0/shellcheck /usr/local/bin/
+COPY --from=builder /tmp/tools/shellcheck-v0.10.0/shellcheck /usr/local/bin/
 
 # 開発に必要な基本ツールのインストール
 RUN dnf update -y && \
-    dnf install -y \
+    dnf --releasever=latest install -y \
     findutils-4.8.0 \
-    git-2.40.1 \
+    git-2.47.1 \
     glibc-locale-source-2.34 \
     nodejs-18.20.6 \
     nodejs-npm-10.8.2 \
@@ -67,7 +67,7 @@ RUN dnf update -y && \
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 # AWS CLIのダウンロードとインストール
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.26.4.zip" -o "awscliv2.zip" && \
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.27.2.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
     ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli && \
     chmod +x /usr/local/bin/aws* && \
@@ -79,10 +79,13 @@ RUN python3.12 -m pip install --no-cache-dir pipx==1.7.1 && \
     python3.12 -m pipx ensurepath
 
 # Python関連ツールのインストール
-RUN pipx install cfn-lint==1.34.1 && \
-    pipx install yamllint==1.37.0 && \
+RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.34.1 && \
+    pipx install --pip-args='--no-cache-dir' yamllint==1.37.0 && \
     rm -rf /root/.local/pipx/logs/*
 
 # NPMパッケージのインストール（runtimeステージで実行）
-RUN npm install -g --omit=dev --no-progress markdownlint-cli2@0.17.2 && \
-    npm install -g --omit=dev --no-progress secretlint@9.3.1 @secretlint/secretlint-rule-preset-recommend@9.3.1
+RUN npm install -g --omit=dev --no-progress npm@10.9.2 && \
+    npm install -g --omit=dev --no-progress markdownlint-cli2@0.17.2 && \
+    npm install -g --omit=dev --no-progress secretlint@9.3.1 @secretlint/secretlint-rule-preset-recommend@9.3.1 && \
+    npm cache clean --force && \
+    rm -rf /root/.npm/_logs

@@ -18,16 +18,17 @@ The DevContainer is configured with Linters and VS Code extensions.
 | Software | Version | Notes |
 | --- | ---: | --- |
 | actionlint | 1.7.7 | Linter for GitHub Actions |
-| awscli | 2.26.4 | AWS CLI |
+| awscli | 2.27.2 | AWS CLI |
 | ghalint | 1.3.0 | Linter for GitHub Actions |
 | hadolint | 2.12.0 | Linter for Dockerfile |
-| shellcheck | 0.8.0 | Linter for Bash |
+| shellcheck | 0.10.0 | Linter for Bash |
 
 ### Installed via npm command
 
 | Software | Version | Notes |
 | --- | ---: | --- |
 | markdownlint-cli2 | 0.17.2 | Linter for Markdown |
+| npm | 10.9.2 | Node.js package manager |
 | SecretLint | 9.3.1 | Secret detection tool |
 
 ### Installed via pipx command
@@ -42,7 +43,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | Package Name | Version | Notes |
 | --- | ---: | --- |
 | findutils | 4.8.0 | File search utilities |
-| git | 2.40.1 | Git command |
+| git | 2.47.1 | Git command |
 | glibc-locale-source | 2.34 | Source for generating locale data |
 | nodejs | 18.20.6 | Node.js runtime |
 | nodejs-npm | 10.8.2 | Node.js package manager (standard npm package manager) |
