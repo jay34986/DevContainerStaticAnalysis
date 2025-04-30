@@ -78,12 +78,17 @@ Install the Dev Containers extension in VS Code and restart VS Code.
 code --install-extension ms-vscode-remote.remote-containers
 ```
 
+(When using WSL2 on Windows)  
+In the Dev Containers extension settings (@ext:ms-vscode-remote.remote-containers), check "Execute In WSL".  
+
+![Open a Remote Window](./images/VSCode_image_01.png)  
+
 Download the repository.  
 Open the downloaded folder in VS Code.  
 Click "Open a Remote Window" in the bottom left corner of VS Code.
 
-![Open a Remote Window](./images/VSCode_image_01.png)
+![Open a Remote Window](./images/VSCode_image_02.png)
 
 Click "Reopen in Container".
 
-![Reopen in Container](./images/VSCode_image_02.png)
+![Reopen in Container](./images/VSCode_image_03.png)
