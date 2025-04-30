@@ -1,4 +1,4 @@
-# ビルドステージ 
+# ビルドステージ
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023.7.20250414.0-minimal AS builder
 
 # シェルオプションの設定
@@ -16,17 +16,49 @@ RUN dnf update -y && \
     dnf clean all
 
 # actionlintのダウンロード
-RUN curl -L "https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_arm64.tar.gz" | tar xvz
+ARG ACTIONLINT_VERSION=1.7.7
+RUN BUILDARCH=$(uname -m) && \
+    if [ "${BUILDARCH}" = "x86_64" ]; then \
+        curl -L "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" | tar xvz; \
+    elif [ "${BUILDARCH}" = "aarch64" ]; then \
+        curl -L "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_arm64.tar.gz" | tar xvz; \
+    else \
+        echo "actionlint: Unsupported architecture: ${BUILDARCH}"; exit 1; \
+    fi
 
 # ghalintのダウンロード
-RUN curl -L "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.3.0/ghalint_1.3.0_linux_arm64.tar.gz" | tar xvz
+ARG GHALINT_VERSION=1.3.0
+RUN BUILDARCH=$(uname -m) && \
+    if [ "${BUILDARCH}" = "x86_64" ]; then \
+        curl -L "https://github.com/suzuki-shunsuke/ghalint/releases/download/v${GHALINT_VERSION}/ghalint_${GHALINT_VERSION}_linux_amd64.tar.gz" | tar xvz; \
+    elif [ "${BUILDARCH}" = "aarch64" ]; then \
+        curl -L "https://github.com/suzuki-shunsuke/ghalint/releases/download/v${GHALINT_VERSION}/ghalint_${GHALINT_VERSION}_linux_arm64.tar.gz" | tar xvz; \
+    else \
+        echo "ghalint: Unsupported architecture: ${BUILDARCH}"; exit 1; \
+    fi
 
 # hadolintのダウンロード
-RUN curl -L "https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-arm64" -o hadolint && \
+ARG HADOLINT_VERSION=2.12.0
+RUN BUILDARCH=$(uname -m) && \
+    if [ "${BUILDARCH}" = "x86_64" ]; then \
+        curl -L "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-x86_64" -o hadolint; \
+    elif [ "${BUILDARCH}" = "aarch64" ]; then \
+        curl -L "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-arm64" -o hadolint; \
+    else \
+        echo "hadolint: Unsupported architecture: ${BUILDARCH}"; exit 1; \
+    fi && \
     chmod +x hadolint
 
 # shellcheckのダウンロード
-RUN curl -L "https://github.com/koalaman/shellcheck/releases/download/v0.10.0/shellcheck-v0.10.0.linux.aarch64.tar.xz" | tar xJv
+ARG SHELLCHECK_VERSION=0.10.0
+RUN BUILDARCH=$(uname -m) && \
+    if [ "${BUILDARCH}" = "x86_64" ]; then \
+        curl -L "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar xJv; \
+    elif [ "${BUILDARCH}" = "aarch64" ]; then \
+        curl -L "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.aarch64.tar.xz" | tar xJv; \
+    else \
+        echo "shellcheck: Unsupported architecture: ${BUILDARCH}"; exit 1; \
+    fi
 
 # 実行環境
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023.7.20250414.0-minimal
@@ -67,7 +99,15 @@ RUN dnf update -y && \
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 # AWS CLIのダウンロードとインストール
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.27.2.zip" -o "awscliv2.zip" && \
+ARG AWSCLI_VERSION=2.27.2
+RUN BUILDARCH=$(uname -m) && \
+    if [ "${BUILDARCH}" = "x86_64" ]; then \
+        curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o awscliv2.zip; \
+    elif [ "${BUILDARCH}" = "aarch64" ]; then \
+        curl -L "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-${AWSCLI_VERSION}.zip" -o awscliv2.zip; \
+    else \
+        echo "AWS CLI: Unsupported architecture: ${BUILDARCH}"; exit 1; \
+    fi && \
     unzip awscliv2.zip && \
     ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli && \
     chmod +x /usr/local/bin/aws* && \
