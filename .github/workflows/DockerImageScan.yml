@@ -36,7 +36,7 @@ jobs:
 
       - name: Install Syft (SBOM generator)
         run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/v1.22.0/install.sh | sh -s -- -b /usr/local/bin
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/v1.23.1/install.sh | sh -s -- -b /usr/local/bin
 
       - name: Generate SBOM (CycloneDX format)
         run: |
@@ -44,7 +44,7 @@ jobs:
 
       - name: Install Grype (Vulnerability scanner)
         run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/grype/v0.91.0/install.sh | sh -s -- -b /usr/local/bin
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/v0.91.2/install.sh | sh -s -- -b /usr/local/bin
 
       - name: Scan SBOM with Grype
         run: |
