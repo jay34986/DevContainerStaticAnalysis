@@ -10,6 +10,7 @@ WORKDIR /tmp/tools
 # ビルドに必要なツールのインストール
 RUN dnf update -y && \
     dnf install -y \
+    gzip-1.12 \
     tar-1.34 \
     unzip-6.0 \
     xz-5.2.5 && \
@@ -19,9 +20,11 @@ RUN dnf update -y && \
 ARG ACTIONLINT_VERSION=1.7.7
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
-        curl -L "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" | tar xvz; \
+        curl -LO "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" && \
+        tar xvzf actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz; \
     elif [ "${BUILDARCH}" = "aarch64" ]; then \
-        curl -L "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_arm64.tar.gz" | tar xvz; \
+        curl -LO "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_arm64.tar.gz" && \
+        tar xvzf actionlint_${ACTIONLINT_VERSION}_linux_arm64.tar.gz; \
     else \
         echo "actionlint: Unsupported architecture: ${BUILDARCH}"; exit 1; \
     fi
@@ -30,9 +33,11 @@ RUN BUILDARCH=$(uname -m) && \
 ARG GHALINT_VERSION=1.3.0
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
-        curl -L "https://github.com/suzuki-shunsuke/ghalint/releases/download/v${GHALINT_VERSION}/ghalint_${GHALINT_VERSION}_linux_amd64.tar.gz" | tar xvz; \
+        curl -LO "https://github.com/suzuki-shunsuke/ghalint/releases/download/v${GHALINT_VERSION}/ghalint_${GHALINT_VERSION}_linux_amd64.tar.gz" && \
+        tar xvzf ghalint_${GHALINT_VERSION}_linux_amd64.tar.gz; \
     elif [ "${BUILDARCH}" = "aarch64" ]; then \
-        curl -L "https://github.com/suzuki-shunsuke/ghalint/releases/download/v${GHALINT_VERSION}/ghalint_${GHALINT_VERSION}_linux_arm64.tar.gz" | tar xvz; \
+        curl -LO "https://github.com/suzuki-shunsuke/ghalint/releases/download/v${GHALINT_VERSION}/ghalint_${GHALINT_VERSION}_linux_arm64.tar.gz" && \
+        tar xvzf ghalint_${GHALINT_VERSION}_linux_arm64.tar.gz; \
     else \
         echo "ghalint: Unsupported architecture: ${BUILDARCH}"; exit 1; \
     fi
@@ -53,9 +58,11 @@ RUN BUILDARCH=$(uname -m) && \
 ARG SHELLCHECK_VERSION=0.10.0
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
-        curl -L "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar xJv; \
+        curl -LO "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" && \
+        tar xJvf shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz; \
     elif [ "${BUILDARCH}" = "aarch64" ]; then \
-        curl -L "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.aarch64.tar.xz" | tar xJv; \
+        curl -LO "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.aarch64.tar.xz" && \
+        tar xJvf shellcheck-v${SHELLCHECK_VERSION}.linux.aarch64.tar.xz; \
     else \
         echo "shellcheck: Unsupported architecture: ${BUILDARCH}"; exit 1; \
     fi
@@ -86,6 +93,7 @@ RUN dnf update -y && \
     findutils-4.8.0 \
     git-2.47.1 \
     glibc-locale-source-2.34 \
+    gzip-1.12 \
     nodejs-18.20.6 \
     nodejs-npm-10.8.2 \
     python3.12-3.12.9 \

@@ -7,7 +7,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 ## DevContainer Base Image
 
-- public.ecr.aws/amazonlinux/amazonlinux:2023.7.20250414.0-minimal
+- public.ecr.aws/amazonlinux/amazonlinux:2023.7.20250428.1-minimal
   - Using Amazon Linux 2023 minimal image
   - Using `dnf` as package manager
 
@@ -45,6 +45,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | findutils | 4.8.0 | File search utilities |
 | git | 2.47.1 | Git command |
 | glibc-locale-source | 2.34 | Source for generating locale data |
+| gzip | 1.12 | Compression tool |
 | nodejs | 18.20.6 | Node.js runtime |
 | nodejs-npm | 10.8.2 | Node.js package manager (standard npm package manager) |
 | python3.12 | 3.12.9 | Python 3.12 |
