@@ -12,6 +12,7 @@
 			"extensions": [
 				"amazonwebservices.aws-toolkit-vscode",
 				"aws-scripting-guy.cform",
+				"charliermarsh.ruff",
 				"DavidAnson.vscode-markdownlint",
 				"exiasr.hadolint",
 				"github.vscode-github-actions",
@@ -20,10 +21,18 @@
 				"kddejong.vscode-cfn-lint",
 				"mechatroner.rainbow-csv",
 				"ms-ceintl.vscode-language-pack-ja",
+				"ms-python.python",
 				"redhat.vscode-yaml",
 				"timonwong.shellcheck"
 			],
 			"settings": {
+				"[python]": {
+					"editor.formatOnSave": true,
+					"editor.codeActionsOnSave": {
+						"source.organizeImports": "explicit"
+					},
+					"editor.defaultFormatter": "charliermarsh.ruff"
+				},
 				"files.exclude": {
 					"**/.git": false
 				},
@@ -33,7 +42,11 @@
 						"code_block_line_length": 140,
 						"tables": true
 					}
-				}
+				},
+				"ruff.lint.ignore": [
+					"INP001" // __init__.py の存在確認を除外
+				],
+				"ruff.lint.select": ["ALL"]
 			}
 		}
 	}
