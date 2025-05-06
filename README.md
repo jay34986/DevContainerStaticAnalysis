@@ -56,20 +56,22 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 ## VS Code Extensions Used in DevContainer
 
-| Extension | Version | Notes |
-| --- | ---: | --- |
-| amazonwebservices.aws-toolkit-vscode | 3.53.0 | AWS extension |
-| aws-scripting-guy.cform | 0.0.24 | CloudFormation extension |
-| DavidAnson.vscode-markdownlint | 0.59.0 | Linter for Markdown |
-| exiasr.hadolint | 1.1.2 | Linter for Dockerfile |
-| github.vscode-github-actions | 0.27.1 | GitHub Actions extension |
-| github.copilot | 1.297.0 | GitHub Copilot extension |
-| github.copilot-chat | 0.26.2 | GitHub Copilot Chat extension |
-| kddejong.vscode-cfn-lint | 0.26.4 | Linter for CloudFormation |
-| mechatroner.rainbow-csv | 3.19.0 | CSV extension |
-| ms-ceintl.vscode-language-pack-ja | 1.99.2025040209 | Japanese language extension |
-| redhat.vscode-yaml | 1.17.0 | YAML extension |
-| timonwong.shellcheck | 0.37.3 | Linter for Bash |
+| Extension | Notes |
+| --- | --- |
+| amazonwebservices.aws-toolkit-vscode | AWS extension |
+| aws-scripting-guy.cform | CloudFormation extension |
+| charliermarsh.ruff | Linter for Python |
+| DavidAnson.vscode-markdownlint | Linter for Markdown |
+| exiasr.hadolint | Linter for Dockerfile |
+| github.vscode-github-actions | GitHub Actions extension |
+| github.copilot | GitHub Copilot extension |
+| github.copilot-chat | GitHub Copilot Chat extension |
+| kddejong.vscode-cfn-lint | Linter for CloudFormation |
+| mechatroner.rainbow-csv | CSV extension |
+| ms-ceintl.vscode-language-pack-ja | Japanese language extension |
+| ms-python.python | Python extension |
+| redhat.vscode-yaml | YAML extension |
+| timonwong.shellcheck | Linter for Bash |
 
 ## Setup Instructions
 

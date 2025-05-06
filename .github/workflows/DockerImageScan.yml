@@ -34,6 +34,19 @@ jobs:
         run: |
           docker build -f .devcontainer/Dockerfile -t dev-container:test .
 
+      - name: Install Testinfra
+        run: |
+          cd /opt
+          python3 -m venv testinfra
+          source testinfra/bin/activate
+          python3 -m pip install pytest-testinfra==10.2.2
+
+      - name: Run Testinfra tests
+        run: |
+          source /opt/testinfra/bin/activate
+          py.test -v tests/docker_image_test.py
+          deactivate
+
       - name: Install Syft (SBOM generator)
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/v1.23.1/install.sh | sh -s -- -b /usr/local/bin
