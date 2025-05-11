@@ -7,14 +7,16 @@
 		"--name", "static-analysis",
 		"--hostname", "static-analysis"
 	],
+	"workspaceFolder": "/workspace",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=consistent",
 	"customizations": {
 		"vscode": {
 			"extensions": [
 				"amazonwebservices.aws-toolkit-vscode",
-				"aws-scripting-guy.cform",
 				"charliermarsh.ruff",
 				"DavidAnson.vscode-markdownlint",
 				"exiasr.hadolint",
+				"fnando.linter",
 				"github.vscode-github-actions",
 				"github.copilot",
 				"github.copilot-chat",
@@ -22,7 +24,6 @@
 				"mechatroner.rainbow-csv",
 				"ms-ceintl.vscode-language-pack-ja",
 				"ms-python.python",
-				"redhat.vscode-yaml",
 				"timonwong.shellcheck"
 			],
 			"settings": {
@@ -35,6 +36,28 @@
 				},
 				"files.exclude": {
 					"**/.git": false
+				},
+				"linter.linters": {
+					"yamllint": {
+						"capabilities": [
+							"ignore-line"
+						],
+						"command": [ 
+							"yamllint", 
+							"--format", 
+							"colored", 
+							"--config-file", 
+							"/workspace/config/yamllint_config.yml", 
+							"-" 
+						],
+						"enabled": true,
+						"languages": [
+							"github-actions-workflow",
+							"yaml"
+						],
+						"name": "yamllint",
+						"url": "https://github.com/adrienverge/yamllint"
+					}
 				},
 				"markdownlint.config": {
 					"MD013": {

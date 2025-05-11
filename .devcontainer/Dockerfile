@@ -107,7 +107,7 @@ RUN dnf update -y && \
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 # AWS CLIのダウンロードとインストール
-ARG AWSCLI_VERSION=2.27.2
+ARG AWSCLI_VERSION=2.27.12
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
         curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o awscliv2.zip; \
@@ -127,7 +127,7 @@ RUN python3.12 -m pip install --no-cache-dir pipx==1.7.1 && \
     python3.12 -m pipx ensurepath
 
 # Python関連ツールのインストール
-RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.34.1 && \
+RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.35.1 && \
     pipx install --pip-args='--no-cache-dir' yamllint==1.37.0 && \
     rm -rf /root/.local/pipx/logs/*
 

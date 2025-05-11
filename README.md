@@ -18,7 +18,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | Software | Version | Notes |
 | --- | ---: | --- |
 | actionlint | 1.7.7 | Linter for GitHub Actions |
-| awscli | 2.27.2 | AWS CLI |
+| awscli | 2.27.12 | AWS CLI |
 | ghalint | 1.3.0 | Linter for GitHub Actions |
 | hadolint | 2.12.0 | Linter for Dockerfile |
 | shellcheck | 0.10.0 | Linter for Bash |
@@ -35,7 +35,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 | Software | Version | Notes |
 | --- | ---: | --- |
-| cfn-lint | 1.34.1 | Linter for CloudFormation |
+| cfn-lint | 1.35.1 | Linter for CloudFormation |
 | yamllint | 1.37.0 | Linter for YAML |
 
 ### Installed via dnf command
@@ -59,10 +59,10 @@ The DevContainer is configured with Linters and VS Code extensions.
 | Extension | Notes |
 | --- | --- |
 | amazonwebservices.aws-toolkit-vscode | AWS extension |
-| aws-scripting-guy.cform | CloudFormation extension |
 | charliermarsh.ruff | Linter for Python |
 | DavidAnson.vscode-markdownlint | Linter for Markdown |
 | exiasr.hadolint | Linter for Dockerfile |
+| fnando.linter | An extension that brings together various Linters. Used by yamllint |
 | github.vscode-github-actions | GitHub Actions extension |
 | github.copilot | GitHub Copilot extension |
 | github.copilot-chat | GitHub Copilot Chat extension |
@@ -70,7 +70,6 @@ The DevContainer is configured with Linters and VS Code extensions.
 | mechatroner.rainbow-csv | CSV extension |
 | ms-ceintl.vscode-language-pack-ja | Japanese language extension |
 | ms-python.python | Python extension |
-| redhat.vscode-yaml | YAML extension |
 | timonwong.shellcheck | Linter for Bash |
 
 ## Setup Instructions
@@ -84,7 +83,7 @@ code --install-extension ms-vscode-remote.remote-containers
 (When using WSL2 on Windows)  
 In the Dev Containers extension settings (@ext:ms-vscode-remote.remote-containers), check "Execute In WSL".  
 
-![Open a Remote Window](./images/VSCode_image_01.png)  
+![Check "Execute In WSL"](./images/VSCode_image_01.png)  
 
 Download the repository.  
 Open the downloaded folder in VS Code.  
