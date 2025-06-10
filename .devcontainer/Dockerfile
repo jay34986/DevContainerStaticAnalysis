@@ -30,7 +30,7 @@ RUN BUILDARCH=$(uname -m) && \
     fi
 
 # ghalintのダウンロード
-ARG GHALINT_VERSION=1.3.0
+ARG GHALINT_VERSION=1.4.1
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
         curl -LO "https://github.com/suzuki-shunsuke/ghalint/releases/download/v${GHALINT_VERSION}/ghalint_${GHALINT_VERSION}_linux_amd64.tar.gz" && \
@@ -94,9 +94,9 @@ RUN dnf update -y && \
     git-2.47.1 \
     glibc-locale-source-2.34 \
     gzip-1.12 \
-    nodejs-18.20.6 \
-    nodejs-npm-10.8.2 \
-    python3.12-3.12.9 \
+    nodejs20-20.19.1 \
+    nodejs20-npm-10.8.2 \
+    python3.12-3.12.10 \
     python3.12-pip-23.2.1 \
     tar-1.34 \
     unzip-6.0 \
@@ -107,7 +107,7 @@ RUN dnf update -y && \
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 # AWS CLIのダウンロードとインストール
-ARG AWSCLI_VERSION=2.27.12
+ARG AWSCLI_VERSION=2.27.32
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
         curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o awscliv2.zip; \
@@ -122,18 +122,19 @@ RUN BUILDARCH=$(uname -m) && \
     rm -rf awscliv2.zip aws
 
 # pipxのインストールと環境設定
-RUN python3.12 -m pip install --no-cache-dir pipx==1.7.1 && \
-    python3.12 -m pip install --no-cache-dir setuptools==70.0.0 && \
+RUN python3.12 -m pip install --no-cache-dir -U pip==25.1.1 && \
+    python3.12 -m pip install --no-cache-dir pipx==1.7.1 && \
+    python3.12 -m pip install --no-cache-dir setuptools==78.1.1 && \
     python3.12 -m pipx ensurepath
 
 # Python関連ツールのインストール
-RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.35.1 && \
-    pipx install --pip-args='--no-cache-dir' yamllint==1.37.0 && \
+RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.35.4 && \
+    pipx install --pip-args='--no-cache-dir' yamllint==1.37.1 && \
     rm -rf /root/.local/pipx/logs/*
 
 # NPMパッケージのインストール（runtimeステージで実行）
-RUN npm install -g --omit=dev --no-progress npm@10.9.2 && \
-    npm install -g --omit=dev --no-progress markdownlint-cli2@0.17.2 && \
-    npm install -g --omit=dev --no-progress secretlint@9.3.1 @secretlint/secretlint-rule-preset-recommend@9.3.1 && \
+RUN npm install -g --omit=dev --no-progress npm@11.4.1 && \
+    npm install -g --omit=dev --no-progress markdownlint-cli2@0.18.1 && \
+    npm install -g --omit=dev --no-progress secretlint@9.3.4 @secretlint/secretlint-rule-preset-recommend@9.3.1 && \
     npm cache clean --force && \
     rm -rf /root/.npm/_logs
