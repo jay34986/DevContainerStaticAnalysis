@@ -46,7 +46,7 @@ def test_ghalint_is_installed(host: Host) -> None:
     """Test if ghalint is installed and has the correct version."""
     cmd = host.run("ghalint -v")
     assert cmd.rc == 0  # noqa: S101
-    assert "1.3.0" in cmd.stdout  # noqa: S101
+    assert "1.4.1" in cmd.stdout  # noqa: S101
 
 
 def test_hadolint_is_installed(host: Host) -> None:
@@ -67,35 +67,35 @@ def test_aws_cli_is_installed(host: Host) -> None:
     """Test if AWS CLI is installed and has the correct version."""
     cmd = host.run("aws --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "2.27.12" in cmd.stdout  # noqa: S101
+    assert "2.27.32" in cmd.stdout  # noqa: S101
 
 
 def test_cfn_lint_is_installed(host: Host) -> None:
     """Test if cfn-lint is installed and has the correct version."""
     cmd = host.run("cfn-lint --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "1.35.1" in cmd.stdout  # noqa: S101
+    assert "1.35.4" in cmd.stdout  # noqa: S101
 
 
 def test_yamllint_is_installed(host: Host) -> None:
     """Test if yamllint is installed and has the correct version."""
     cmd = host.run("yamllint --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "1.37.0" in cmd.stdout  # noqa: S101
+    assert "1.37.1" in cmd.stdout  # noqa: S101
 
 
 def test_markdownlint_is_installed(host: Host) -> None:
     """Test if markdownlint is installed and has the correct version."""
     cmd = host.run("markdownlint-cli2 --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "0.17.2" in cmd.stdout  # noqa: S101
+    assert "0.18.1" in cmd.stdout  # noqa: S101
 
 
 def test_secretlint_is_installed(host: Host) -> None:
     """Test if secretlint is installed and has the correct version."""
     cmd = host.run("secretlint --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "9.3.1" in cmd.stdout  # noqa: S101
+    assert "9.3.4" in cmd.stdout  # noqa: S101
 
 
 FILE_MODE_EXECUTABLE = 0o755
