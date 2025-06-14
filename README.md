@@ -7,7 +7,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 ## DevContainer Base Image
 
-- public.ecr.aws/amazonlinux/amazonlinux:2023.7.20250527.1-minimal
+- public.ecr.aws/amazonlinux/amazonlinux:2023.7.20250609.0-minimal
   - Using Amazon Linux 2023 minimal image
   - Using `dnf` as package manager
 
@@ -18,7 +18,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | Software | Version | Notes |
 | --- | ---: | --- |
 | actionlint | 1.7.7 | Linter for GitHub Actions |
-| awscli | 2.27.32 | AWS CLI |
+| awscli | 2.27.35 | AWS CLI |
 | ghalint | 1.4.1 | Linter for GitHub Actions |
 | hadolint | 2.12.0 | Linter for Dockerfile |
 | shellcheck | 0.10.0 | Linter for Bash |
@@ -28,14 +28,14 @@ The DevContainer is configured with Linters and VS Code extensions.
 | Software | Version | Notes |
 | --- | ---: | --- |
 | markdownlint-cli2 | 0.18.1 | Linter for Markdown |
-| npm | 11.4.1 | Node.js package manager |
+| npm | 11.4.2 | Node.js package manager |
 | SecretLint | 9.3.4 | Secret detection tool |
 
 ### Installed via pipx command
 
 | Software | Version | Notes |
 | --- | ---: | --- |
-| cfn-lint | 1.35.4 | Linter for CloudFormation |
+| cfn-lint | 1.36.0 | Linter for CloudFormation |
 | yamllint | 1.37.1 | Linter for YAML |
 
 ### Installed via dnf command
@@ -46,7 +46,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | git | 2.47.1 | Git command |
 | glibc-locale-source | 2.34 | Source for generating locale data |
 | gzip | 1.12 | Compression tool |
-| nodejs20 | 20.19.1 | Node.js runtime |
+| nodejs20 | 20.19.2 | Node.js runtime |
 | nodejs20-npm | 10.8.2 | Node.js package manager (standard npm package manager) |
 | python3.12 | 3.12.10 | Python 3.12 |
 | python3.12-pip | 23.2.1 | pip for Python 3.12 |
