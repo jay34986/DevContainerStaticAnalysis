@@ -30,7 +30,7 @@ RUN BUILDARCH=$(uname -m) && \
     fi
 
 # ghalintのダウンロード
-ARG GHALINT_VERSION=1.4.1
+ARG GHALINT_VERSION=1.5.1
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
         curl -LO "https://github.com/suzuki-shunsuke/ghalint/releases/download/v${GHALINT_VERSION}/ghalint_${GHALINT_VERSION}_linux_amd64.tar.gz" && \
@@ -128,7 +128,7 @@ RUN python3.12 -m pip install --no-cache-dir -U pip==25.1.1 && \
     python3.12 -m pipx ensurepath
 
 # Python関連ツールのインストール
-RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.36.0 && \
+RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.36.1 && \
     pipx install --pip-args='--no-cache-dir' yamllint==1.37.1 && \
     rm -rf /root/.local/pipx/logs/*
 
