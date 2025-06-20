@@ -19,7 +19,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | --- | ---: | --- |
 | actionlint | 1.7.7 | Linter for GitHub Actions |
 | awscli | 2.27.35 | AWS CLI |
-| ghalint | 1.4.1 | Linter for GitHub Actions |
+| ghalint | 1.5.1 | Linter for GitHub Actions |
 | hadolint | 2.12.0 | Linter for Dockerfile |
 | shellcheck | 0.10.0 | Linter for Bash |
 
@@ -35,7 +35,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 | Software | Version | Notes |
 | --- | ---: | --- |
-| cfn-lint | 1.36.0 | Linter for CloudFormation |
+| cfn-lint | 1.36.1 | Linter for CloudFormation |
 | yamllint | 1.37.1 | Linter for YAML |
 
 ### Installed via dnf command

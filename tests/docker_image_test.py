@@ -46,7 +46,7 @@ def test_ghalint_is_installed(host: Host) -> None:
     """Test if ghalint is installed and has the correct version."""
     cmd = host.run("ghalint -v")
     assert cmd.rc == 0  # noqa: S101
-    assert "1.4.1" in cmd.stdout  # noqa: S101
+    assert "1.5.1" in cmd.stdout  # noqa: S101
 
 
 def test_hadolint_is_installed(host: Host) -> None:
@@ -74,7 +74,7 @@ def test_cfn_lint_is_installed(host: Host) -> None:
     """Test if cfn-lint is installed and has the correct version."""
     cmd = host.run("cfn-lint --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "1.36.0" in cmd.stdout  # noqa: S101
+    assert "1.36.1" in cmd.stdout  # noqa: S101
 
 
 def test_yamllint_is_installed(host: Host) -> None:
