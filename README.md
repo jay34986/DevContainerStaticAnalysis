@@ -7,7 +7,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 ## DevContainer Base Image
 
-- public.ecr.aws/amazonlinux/amazonlinux:2023.7.20250609.0-minimal
+- public.ecr.aws/amazonlinux/amazonlinux:2023.7.20250623.1-minimal
   - Using Amazon Linux 2023 minimal image
   - Using `dnf` as package manager
 
