@@ -21,6 +21,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
@@ -61,4 +62,10 @@ jobs:
 
       - name: Scan SBOM with Grype
         run: |
-          grype --only-fixed sbom:sbom.json
+          grype --only-fixed sbom:sbom.json -o sarif=grype.sarif
+
+      - name: Upload Grype report
+        if: always() && (hashFiles('grype.sarif') != '')
+        uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b  # v3.29.2
+        with:
+          sarif_file: grype.sarif
