@@ -46,7 +46,7 @@ def test_ghalint_is_installed(host: Host) -> None:
     """Test if ghalint is installed and has the correct version."""
     cmd = host.run("ghalint -v")
     assert cmd.rc == 0  # noqa: S101
-    assert "1.5.1" in cmd.stdout  # noqa: S101
+    assert "1.5.3" in cmd.stdout  # noqa: S101
 
 
 def test_hadolint_is_installed(host: Host) -> None:
@@ -67,14 +67,14 @@ def test_aws_cli_is_installed(host: Host) -> None:
     """Test if AWS CLI is installed and has the correct version."""
     cmd = host.run("aws --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "2.27.35" in cmd.stdout  # noqa: S101
+    assert "2.27.56" in cmd.stdout  # noqa: S101
 
 
 def test_cfn_lint_is_installed(host: Host) -> None:
     """Test if cfn-lint is installed and has the correct version."""
     cmd = host.run("cfn-lint --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "1.36.1" in cmd.stdout  # noqa: S101
+    assert "1.38.0" in cmd.stdout  # noqa: S101
 
 
 def test_yamllint_is_installed(host: Host) -> None:
@@ -95,7 +95,7 @@ def test_secretlint_is_installed(host: Host) -> None:
     """Test if secretlint is installed and has the correct version."""
     cmd = host.run("secretlint --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "9.3.4" in cmd.stdout  # noqa: S101
+    assert "10.2.1" in cmd.stdout  # noqa: S101
 
 
 FILE_MODE_EXECUTABLE = 0o755
