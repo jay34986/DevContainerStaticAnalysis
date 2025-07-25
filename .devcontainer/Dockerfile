@@ -1,5 +1,5 @@
 # ビルドステージ
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250715.0-minimal AS builder
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250721.2-minimal AS builder
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -68,7 +68,7 @@ RUN BUILDARCH=$(uname -m) && \
     fi
 
 # 実行環境
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250715.0-minimal
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250721.2-minimal
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
