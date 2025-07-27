@@ -1,5 +1,5 @@
 # ビルドステージ
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250715.0-minimal AS builder
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250721.2-minimal AS builder
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -68,7 +68,7 @@ RUN BUILDARCH=$(uname -m) && \
     fi
 
 # 実行環境
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250715.0-minimal
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250721.2-minimal
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -90,8 +90,9 @@ COPY --from=builder /tmp/tools/shellcheck-v0.10.0/shellcheck /usr/local/bin/
 # 開発に必要な基本ツールのインストール
 RUN dnf update -y && \
     dnf --releasever=latest install -y \
+    diffutils-3.8 \
     findutils-4.8.0 \
-    git-2.47.1 \
+    git-2.50.1 \
     glibc-locale-source-2.34 \
     gzip-1.12 \
     nodejs20-20.19.2 \
@@ -107,7 +108,7 @@ RUN dnf update -y && \
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 # AWS CLIのダウンロードとインストール
-ARG AWSCLI_VERSION=2.27.56
+ARG AWSCLI_VERSION=2.27.60
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
         curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o awscliv2.zip; \

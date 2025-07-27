@@ -18,7 +18,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | Software | Version | Notes |
 | --- | ---: | --- |
 | actionlint | 1.7.7 | Linter for GitHub Actions |
-| awscli | 2.27.56 | AWS CLI |
+| awscli | 2.27.60 | AWS CLI |
 | ghalint | 1.5.3 | Linter for GitHub Actions |
 | hadolint | 2.12.0 | Linter for Dockerfile |
 | shellcheck | 0.10.0 | Linter for Bash |
@@ -42,8 +42,9 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 | Package Name | Version | Notes |
 | --- | ---: | --- |
+| diffutils | 3.8 | Finding differences between files |
 | findutils | 4.8.0 | File search utilities |
-| git | 2.47.1 | Git command |
+| git | 2.50.1 | Git command |
 | glibc-locale-source | 2.34 | Source for generating locale data |
 | gzip | 1.12 | Compression tool |
 | nodejs20 | 20.19.2 | Node.js runtime |
