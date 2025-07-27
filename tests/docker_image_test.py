@@ -67,7 +67,7 @@ def test_aws_cli_is_installed(host: Host) -> None:
     """Test if AWS CLI is installed and has the correct version."""
     cmd = host.run("aws --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "2.27.56" in cmd.stdout  # noqa: S101
+    assert "2.27.60" in cmd.stdout  # noqa: S101
 
 
 def test_cfn_lint_is_installed(host: Host) -> None:
