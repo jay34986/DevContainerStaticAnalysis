@@ -18,7 +18,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | Software | Version | Notes |
 | --- | ---: | --- |
 | actionlint | 1.7.7 | Linter for GitHub Actions |
-| awscli | 2.27.60 | AWS CLI |
+| awscli | 2.28.1 | AWS CLI |
 | ghalint | 1.5.3 | Linter for GitHub Actions |
 | hadolint | 2.12.0 | Linter for Dockerfile |
 | shellcheck | 0.10.0 | Linter for Bash |

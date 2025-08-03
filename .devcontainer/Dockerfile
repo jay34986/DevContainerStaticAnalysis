@@ -108,7 +108,7 @@ RUN dnf update -y && \
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 # AWS CLIのダウンロードとインストール
-ARG AWSCLI_VERSION=2.27.60
+ARG AWSCLI_VERSION=2.28.1
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
         curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o awscliv2.zip; \
