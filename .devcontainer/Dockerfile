@@ -1,5 +1,5 @@
 # ビルドステージ
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250721.2-minimal AS builder
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250804.0-minimal AS builder
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -68,7 +68,7 @@ RUN BUILDARCH=$(uname -m) && \
     fi
 
 # 実行環境
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250721.2-minimal
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250804.0-minimal
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -100,6 +100,7 @@ RUN dnf update -y && \
     python3.12-3.12.11 \
     python3.12-pip-23.2.1 \
     tar-1.34 \
+    tree-1.8.0 \
     unzip-6.0 \
     xz-5.2.5 && \
     dnf clean all
@@ -108,7 +109,7 @@ RUN dnf update -y && \
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 # AWS CLIのダウンロードとインストール
-ARG AWSCLI_VERSION=2.28.1
+ARG AWSCLI_VERSION=2.28.6
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
         curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o awscliv2.zip; \
@@ -136,6 +137,6 @@ RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.38.0 && \
 # NPMパッケージのインストール（runtimeステージで実行）
 RUN npm install -g --omit=dev --no-progress npm@11.4.2 && \
     npm install -g --omit=dev --no-progress markdownlint-cli2@0.18.1 && \
-    npm install -g --omit=dev --no-progress secretlint@10.2.1 @secretlint/secretlint-rule-preset-recommend@10.2.1 && \
+    npm install -g --omit=dev --no-progress secretlint@11.0.1 @secretlint/secretlint-rule-preset-recommend@11.0.1 && \
     npm cache clean --force && \
     rm -rf /root/.npm/_logs
