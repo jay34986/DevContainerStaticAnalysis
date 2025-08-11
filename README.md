@@ -7,7 +7,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 ## DevContainer Base Image
 
-- public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250715.0-minimal
+- public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250804.0-minimal
   - Using Amazon Linux 2023 minimal image
   - Using `dnf` as package manager
 
@@ -18,7 +18,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | Software | Version | Notes |
 | --- | ---: | --- |
 | actionlint | 1.7.7 | Linter for GitHub Actions |
-| awscli | 2.28.1 | AWS CLI |
+| awscli | 2.28.6 | AWS CLI |
 | ghalint | 1.5.3 | Linter for GitHub Actions |
 | hadolint | 2.12.0 | Linter for Dockerfile |
 | shellcheck | 0.10.0 | Linter for Bash |
@@ -29,7 +29,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | --- | ---: | --- |
 | markdownlint-cli2 | 0.18.1 | Linter for Markdown |
 | npm | 11.4.2 | Node.js package manager |
-| SecretLint | 10.2.1 | Secret detection tool |
+| SecretLint | 11.0.1 | Secret detection tool |
 
 ### Installed via pipx command
 
@@ -52,6 +52,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | python3.12 | 3.12.11 | Python 3.12 |
 | python3.12-pip | 23.2.1 | pip for Python 3.12 |
 | tar | 1.34 | Archive tool |
+| tree | 1.8.0 | File system tree viewer |
 | unzip | 6.0 | Decompression tool |
 | xz | 5.2.5 | Compression tool |
 
