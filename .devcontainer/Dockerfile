@@ -97,8 +97,8 @@ RUN dnf update -y && \
     gzip-1.12 \
     nodejs20-20.19.2 \
     nodejs20-npm-10.8.2 \
-    python3.12-3.12.11 \
-    python3.12-pip-23.2.1 \
+    python3.13-3.13.3 \
+    python3.13-pip-24.2 \
     tar-1.34 \
     tree-1.8.0 \
     unzip-6.0 \
@@ -124,10 +124,10 @@ RUN BUILDARCH=$(uname -m) && \
     rm -rf awscliv2.zip aws
 
 # pipxのインストールと環境設定
-RUN python3.12 -m pip install --no-cache-dir -U pip==25.1.1 && \
-    python3.12 -m pip install --no-cache-dir pipx==1.7.1 && \
-    python3.12 -m pip install --no-cache-dir setuptools==80.9.0 && \
-    python3.12 -m pipx ensurepath
+RUN python3.13 -m pip install --no-cache-dir -U pip==25.1.1 && \
+    python3.13 -m pip install --no-cache-dir pipx==1.7.1 && \
+    python3.13 -m pip install --no-cache-dir setuptools==80.9.0 && \
+    python3.13 -m pipx ensurepath
 
 # Python関連ツールのインストール
 RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.38.0 && \
