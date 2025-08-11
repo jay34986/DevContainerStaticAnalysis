@@ -49,8 +49,8 @@ The DevContainer is configured with Linters and VS Code extensions.
 | gzip | 1.12 | Compression tool |
 | nodejs20 | 20.19.2 | Node.js runtime |
 | nodejs20-npm | 10.8.2 | Node.js package manager (standard npm package manager) |
-| python3.12 | 3.12.11 | Python 3.12 |
-| python3.12-pip | 23.2.1 | pip for Python 3.12 |
+| python3.13 | 3.13.3 | Python 3.13 |
+| python3.13-pip | 24.2 | pip for Python 3.13 |
 | tar | 1.34 | Archive tool |
 | tree | 1.8.0 | File system tree viewer |
 | unzip | 6.0 | Decompression tool |
