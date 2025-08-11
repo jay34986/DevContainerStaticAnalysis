@@ -67,7 +67,7 @@ def test_aws_cli_is_installed(host: Host) -> None:
     """Test if AWS CLI is installed and has the correct version."""
     cmd = host.run("aws --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "2.28.1" in cmd.stdout  # noqa: S101
+    assert "2.28.6" in cmd.stdout  # noqa: S101
 
 
 def test_cfn_lint_is_installed(host: Host) -> None:
@@ -95,7 +95,7 @@ def test_secretlint_is_installed(host: Host) -> None:
     """Test if secretlint is installed and has the correct version."""
     cmd = host.run("secretlint --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "10.2.1" in cmd.stdout  # noqa: S101
+    assert "11.0.1" in cmd.stdout  # noqa: S101
 
 
 FILE_MODE_EXECUTABLE = 0o755
