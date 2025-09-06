@@ -1,5 +1,5 @@
 # ビルドステージ
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250804.0-minimal AS builder
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250818.0-minimal AS builder
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -68,7 +68,7 @@ RUN BUILDARCH=$(uname -m) && \
     fi
 
 # 実行環境
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250804.0-minimal
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250818.0-minimal
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -127,6 +127,7 @@ RUN BUILDARCH=$(uname -m) && \
 RUN python3.13 -m pip install --no-cache-dir -U pip==25.1.1 && \
     python3.13 -m pip install --no-cache-dir pipx==1.7.1 && \
     python3.13 -m pip install --no-cache-dir setuptools==80.9.0 && \
+    python3.13 -m pip install --no-cache-dir uv==0.8.12 && \
     python3.13 -m pipx ensurepath
 
 # Python関連ツールのインストール
