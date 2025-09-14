@@ -7,7 +7,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 ## DevContainer Base Image
 
-- public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250818.0-minimal
+- public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250908.0-minimal
   - Using Amazon Linux 2023 minimal image
   - Using `dnf` as package manager
 
@@ -35,7 +35,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 | Software | Version | Notes |
 | --- | ---: | --- |
-| cfn-lint | 1.38.0 | Linter for CloudFormation |
+| cfn-lint | 1.39.1 | Linter for CloudFormation |
 | yamllint | 1.37.1 | Linter for YAML |
 
 ### Installed via dnf command
