@@ -1,5 +1,5 @@
 # ビルドステージ
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250818.0-minimal AS builder
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250908.0-minimal AS builder
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -68,7 +68,7 @@ RUN BUILDARCH=$(uname -m) && \
     fi
 
 # 実行環境
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250818.0-minimal
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250908.0-minimal
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -131,7 +131,7 @@ RUN python3.13 -m pip install --no-cache-dir -U pip==25.1.1 && \
     python3.13 -m pipx ensurepath
 
 # Python関連ツールのインストール
-RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.38.0 && \
+RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.39.1 && \
     pipx install --pip-args='--no-cache-dir' yamllint==1.37.1 && \
     rm -rf /root/.local/pipx/logs/*
 

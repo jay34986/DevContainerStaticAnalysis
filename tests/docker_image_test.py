@@ -74,7 +74,7 @@ def test_cfn_lint_is_installed(host: Host) -> None:
     """Test if cfn-lint is installed and has the correct version."""
     cmd = host.run("cfn-lint --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "1.38.0" in cmd.stdout  # noqa: S101
+    assert "1.39.1" in cmd.stdout  # noqa: S101
 
 
 def test_yamllint_is_installed(host: Host) -> None:
