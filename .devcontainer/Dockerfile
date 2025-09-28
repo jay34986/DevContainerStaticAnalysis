@@ -1,5 +1,5 @@
 # ビルドステージ
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250908.0-minimal AS builder
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250915.0-minimal AS builder
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -68,7 +68,7 @@ RUN BUILDARCH=$(uname -m) && \
     fi
 
 # 実行環境
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250908.0-minimal
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250915.0-minimal
 
 # シェルオプションの設定
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -109,7 +109,7 @@ RUN dnf update -y && \
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 # AWS CLIのダウンロードとインストール
-ARG AWSCLI_VERSION=2.28.6
+ARG AWSCLI_VERSION=2.31.3
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
         curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o awscliv2.zip; \
@@ -124,7 +124,7 @@ RUN BUILDARCH=$(uname -m) && \
     rm -rf awscliv2.zip aws
 
 # pipxのインストールと環境設定
-RUN python3.13 -m pip install --no-cache-dir -U pip==25.1.1 && \
+RUN python3.13 -m pip install --no-cache-dir -U pip==25.2 && \
     python3.13 -m pip install --no-cache-dir pipx==1.7.1 && \
     python3.13 -m pip install --no-cache-dir setuptools==80.9.0 && \
     python3.13 -m pip install --no-cache-dir uv==0.8.12 && \
