@@ -7,7 +7,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 ## DevContainer Base Image
 
-- public.ecr.aws/amazonlinux/amazonlinux:2023.8.20250915.0-minimal
+- public.ecr.aws/amazonlinux/amazonlinux:2023.9.20250929.0-minimal
   - Using Amazon Linux 2023 minimal image
   - Using `dnf` as package manager
 
@@ -17,8 +17,8 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 | Software | Version | Notes |
 | --- | ---: | --- |
-| actionlint | 1.7.7 | Linter for GitHub Actions |
-| awscli | 2.31.3 | AWS CLI |
+| actionlint | 1.7.8 | Linter for GitHub Actions |
+| awscli | 2.31.13 | AWS CLI |
 | ghalint | 1.5.3 | Linter for GitHub Actions |
 | hadolint | 2.12.0 | Linter for Dockerfile |
 | shellcheck | 0.10.0 | Linter for Bash |
