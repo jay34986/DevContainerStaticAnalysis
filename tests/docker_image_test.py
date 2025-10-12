@@ -39,7 +39,7 @@ def test_actionlint_is_installed(host: Host) -> None:
     """Test if actionlint is installed and has the correct version."""
     cmd = host.run("actionlint --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "1.7.7" in cmd.stdout  # noqa: S101
+    assert "1.7.8" in cmd.stdout  # noqa: S101
 
 
 def test_ghalint_is_installed(host: Host) -> None:
@@ -67,7 +67,7 @@ def test_aws_cli_is_installed(host: Host) -> None:
     """Test if AWS CLI is installed and has the correct version."""
     cmd = host.run("aws --version")
     assert cmd.rc == 0  # noqa: S101
-    assert "2.31.3" in cmd.stdout  # noqa: S101
+    assert "2.31.13" in cmd.stdout  # noqa: S101
 
 
 def test_cfn_lint_is_installed(host: Host) -> None:
