@@ -17,7 +17,7 @@ RUN dnf update -y && \
     dnf clean all
 
 # actionlintのダウンロード
-ARG ACTIONLINT_VERSION=1.7.7
+ARG ACTIONLINT_VERSION=1.7.8
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
         curl -LO "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" && \
@@ -95,7 +95,7 @@ RUN dnf update -y && \
     git-2.50.1 \
     glibc-locale-source-2.34 \
     gzip-1.12 \
-    nodejs20-20.19.2 \
+    nodejs20-20.19.5 \
     nodejs20-npm-10.8.2 \
     python3.13-3.13.3 \
     python3.13-pip-24.2 \
@@ -109,7 +109,7 @@ RUN dnf update -y && \
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 # AWS CLIのダウンロードとインストール
-ARG AWSCLI_VERSION=2.31.3
+ARG AWSCLI_VERSION=2.31.13
 RUN BUILDARCH=$(uname -m) && \
     if [ "${BUILDARCH}" = "x86_64" ]; then \
         curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o awscliv2.zip; \
