@@ -7,9 +7,13 @@ updates:
     schedule:
       interval: "daily"
     target-branch: "develop"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "docker"
     directory: "/.devcontainer/"
     schedule:
       interval: "daily"
     target-branch: "develop"
+    cooldown:
+      default-days: 7
