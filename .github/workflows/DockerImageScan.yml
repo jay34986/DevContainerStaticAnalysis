@@ -8,7 +8,10 @@ on:  # yamllint disable-line rule:truthy
     branches:
       - develop
     paths:
+      - ".devcontainer/bootstrap-requirements.txt"
       - ".devcontainer/Dockerfile"
+      - ".devcontainer/requirements.txt"
+      - ".devcontainer/package.json"
   workflow_dispatch:
 
 defaults:

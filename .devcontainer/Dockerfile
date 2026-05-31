@@ -102,6 +102,7 @@ RUN dnf update -y && \
     tar-1.34 \
     tree-1.8.0 \
     unzip-6.0 \
+    which-2.21 \
     xz-5.2.5 && \
     dnf clean all
 
@@ -123,21 +124,23 @@ RUN BUILDARCH=$(uname -m) && \
     chmod +x /usr/local/bin/aws* && \
     rm -rf awscliv2.zip aws
 
-# pipxのインストールと環境設定
-RUN python3.13 -m pip install --no-cache-dir -U pip==25.2 && \
-    python3.13 -m pip install --no-cache-dir pipx==1.7.1 && \
-    python3.13 -m pip install --no-cache-dir setuptools==80.9.0 && \
-    python3.13 -m pip install --no-cache-dir uv==0.8.12 && \
-    python3.13 -m pipx ensurepath
+# Pythonパッケージのインストール
+COPY .devcontainer/bootstrap-requirements.txt /tmp/bootstrap-requirements.txt
+COPY .devcontainer/requirements.txt /tmp/requirements.txt
+# hadolint ignore=DL3013
+RUN python3.13 -m pip install --no-cache-dir --requirement /tmp/bootstrap-requirements.txt && \
+    while IFS= read -r package; do \
+        [[ -z "${package}" || "${package}" =~ ^# ]] && continue; \
+        pipx install --python python3.13 --pip-args=--no-cache-dir "${package}"; \
+    done < /tmp/requirements.txt && \
+    rm /tmp/bootstrap-requirements.txt /tmp/requirements.txt
 
-# Python関連ツールのインストール
-RUN pipx install --pip-args='--no-cache-dir' cfn-lint==1.39.1 && \
-    pipx install --pip-args='--no-cache-dir' yamllint==1.37.1 && \
-    rm -rf /root/.local/pipx/logs/*
-
-# NPMパッケージのインストール（runtimeステージで実行）
-RUN npm install -g --omit=dev --no-progress npm@11.4.2 && \
-    npm install -g --omit=dev --no-progress markdownlint-cli2@0.18.1 && \
-    npm install -g --omit=dev --no-progress secretlint@11.0.1 @secretlint/secretlint-rule-preset-recommend@11.0.1 && \
+# NPMパッケージのインストール
+COPY .devcontainer/package.json /opt/node/package.json
+WORKDIR /opt/node
+RUN npm install --omit=dev --no-progress && \
     npm cache clean --force && \
     rm -rf /root/.npm/_logs
+WORKDIR /
+
+ENV PATH="/opt/node/node_modules/.bin:${PATH}"
