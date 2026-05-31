@@ -47,14 +47,6 @@ The DevContainer is configured with Linters and VS Code extensions.
 | pipx | 1.12.0 | Isolated installer for Python CLI tools |
 | setuptools | 82.0.1 | Bootstrap build backend for Python tooling |
 
-### Installed via pip command
-
-| Software | Version | Notes |
-| --- | ---: | --- |
-| pip | 25.2 | Bootstrap package manager for Python tooling |
-| pipx | 1.7.1 | Isolated installer for Python CLI tools |
-| setuptools | 80.9.0 | Bootstrap build backend for Python tooling |
-
 ### Installed via dnf command
 
 | Package Name | Version | Notes |
