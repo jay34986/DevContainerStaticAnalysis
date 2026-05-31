@@ -1,7 +1,8 @@
 {
 	"name": "StaticAnalysis",
 	"build": {
-		"dockerfile": "Dockerfile"
+		"dockerfile": "Dockerfile",
+		"context": ".."
 	},
 	"runArgs": [
 		"--name", "static-analysis",

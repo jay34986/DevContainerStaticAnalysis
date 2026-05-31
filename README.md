@@ -36,7 +36,16 @@ The DevContainer is configured with Linters and VS Code extensions.
 | Software | Version | Notes |
 | --- | ---: | --- |
 | cfn-lint | 1.39.1 | Linter for CloudFormation |
+| uv | 0.8.12 | Python package and project manager |
 | yamllint | 1.37.1 | Linter for YAML |
+
+### Installed via pip command
+
+| Software | Version | Notes |
+| --- | ---: | --- |
+| pip | 25.2 | Bootstrap package manager for Python tooling |
+| pipx | 1.7.1 | Isolated installer for Python CLI tools |
+| setuptools | 80.9.0 | Bootstrap build backend for Python tooling |
 
 ### Installed via dnf command
 
@@ -54,6 +63,7 @@ The DevContainer is configured with Linters and VS Code extensions.
 | tar | 1.34 | Archive tool |
 | tree | 1.8.0 | File system tree viewer |
 | unzip | 6.0 | Decompression tool |
+| which | 2.21 | Display file path |
 | xz | 5.2.5 | Compression tool |
 
 ## VS Code Extensions Used in DevContainer
