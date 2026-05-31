@@ -17,26 +17,35 @@ The DevContainer is configured with Linters and VS Code extensions.
 
 | Software | Version | Notes |
 | --- | ---: | --- |
-| actionlint | 1.7.8 | Linter for GitHub Actions |
-| awscli | 2.31.13 | AWS CLI |
-| ghalint | 1.5.3 | Linter for GitHub Actions |
-| hadolint | 2.12.0 | Linter for Dockerfile |
-| shellcheck | 0.10.0 | Linter for Bash |
+| actionlint | 1.7.12 | Linter for GitHub Actions |
+| awscli | 2.34.57 | AWS CLI |
+| ghalint | 1.5.6 | Linter for GitHub Actions |
+| hadolint | 2.14.0 | Linter for Dockerfile |
+| shellcheck | 0.11.0 | Linter for Bash |
 
 ### Installed via npm command
 
 | Software | Version | Notes |
 | --- | ---: | --- |
-| markdownlint-cli2 | 0.18.1 | Linter for Markdown |
-| npm | 11.4.2 | Node.js package manager |
-| SecretLint | 11.0.1 | Secret detection tool |
+| markdownlint-cli2 | 0.22.1 | Linter for Markdown |
+| npm | 11.15.0 | Node.js package manager |
+| SecretLint | 13.0.2 | Secret detection tool |
 
 ### Installed via pipx command
 
 | Software | Version | Notes |
 | --- | ---: | --- |
-| cfn-lint | 1.39.1 | Linter for CloudFormation |
-| yamllint | 1.37.1 | Linter for YAML |
+| cfn-lint | 1.51.1 | Linter for CloudFormation |
+| uv | 0.11.16 | Python package and project manager |
+| yamllint | 1.38.0 | Linter for YAML |
+
+### Installed via pip command
+
+| Software | Version | Notes |
+| --- | ---: | --- |
+| pip | 26.1.1 | Bootstrap package manager for Python tooling |
+| pipx | 1.12.0 | Isolated installer for Python CLI tools |
+| setuptools | 82.0.1 | Bootstrap build backend for Python tooling |
 
 ### Installed via dnf command
 
@@ -47,13 +56,14 @@ The DevContainer is configured with Linters and VS Code extensions.
 | git | 2.50.1 | Git command |
 | glibc-locale-source | 2.34 | Source for generating locale data |
 | gzip | 1.12 | Compression tool |
-| nodejs20 | 20.19.2 | Node.js runtime |
-| nodejs20-npm | 10.8.2 | Node.js package manager (standard npm package manager) |
-| python3.13 | 3.13.3 | Python 3.13 |
-| python3.13-pip | 24.2 | pip for Python 3.13 |
+| nodejs24 | 24.15.0 | Node.js runtime |
+| nodejs24-npm | 11.12.1 | Node.js package manager (standard npm package manager) |
+| python3.14 | 3.14.4 | Python 3.14 |
+| python3.14-pip | 25.1.1 | pip for Python 3.14 |
 | tar | 1.34 | Archive tool |
 | tree | 1.8.0 | File system tree viewer |
 | unzip | 6.0 | Decompression tool |
+| which | 2.21 | Display file path |
 | xz | 5.2.5 | Compression tool |
 
 ## VS Code Extensions Used in DevContainer

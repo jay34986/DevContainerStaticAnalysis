@@ -1,0 +1,10 @@
+{
+  "name": "devcontainer",
+  "private": true,
+  "dependencies": {
+    "npm": "11.15.0",
+    "markdownlint-cli2": "0.22.1",
+    "secretlint": "13.0.2",
+    "@secretlint/secretlint-rule-preset-recommend": "13.0.2"
+  }
+}
