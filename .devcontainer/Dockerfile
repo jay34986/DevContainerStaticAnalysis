@@ -95,15 +95,19 @@ RUN dnf update -y && \
     git-2.50.1 \
     glibc-locale-source-2.34 \
     gzip-1.12 \
+    jq-1.7.1 \
     nodejs24-24.15.0 \
     nodejs24-npm-11.12.1 \
     python3.14-3.14.4 \
     python3.14-pip-25.1.1 \
+    spal-release-2023 \
     tar-1.34 \
     tree-1.8.0 \
     unzip-6.0 \
     which-2.21 \
     xz-5.2.5 && \
+    dnf --releasever=latest install -y \
+    ripgrep-14.1.1 && \
     dnf clean all
 
 # localeの追加
