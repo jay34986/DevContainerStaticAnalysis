@@ -56,10 +56,12 @@ The DevContainer is configured with Linters and VS Code extensions.
 | git | 2.50.1 | Git command |
 | glibc-locale-source | 2.34 | Source for generating locale data |
 | gzip | 1.12 | Compression tool |
+| jq | 1.7.1 | JSON processor |
 | nodejs24 | 24.15.0 | Node.js runtime |
 | nodejs24-npm | 11.12.1 | Node.js package manager (standard npm package manager) |
 | python3.14 | 3.14.4 | Python 3.14 |
 | python3.14-pip | 25.1.1 | pip for Python 3.14 |
+| ripgrep | 14.1.1 | Fast text search tool |
 | tar | 1.34 | Archive tool |
 | tree | 1.8.0 | File system tree viewer |
 | unzip | 6.0 | Decompression tool |
