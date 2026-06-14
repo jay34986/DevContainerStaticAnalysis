@@ -140,6 +140,7 @@ RUN python3.14 -m pip install --no-cache-dir --requirement /tmp/bootstrap-requir
     rm /tmp/bootstrap-requirements.txt /tmp/requirements.txt
 
 # NPMパッケージのインストール
+COPY .devcontainer/.npmrc /opt/node/.npmrc
 COPY .devcontainer/package.json /opt/node/package.json
 WORKDIR /opt/node
 RUN npm install --omit=dev --no-progress && \
