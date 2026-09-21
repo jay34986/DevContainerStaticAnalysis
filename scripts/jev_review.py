@@ -15,6 +15,7 @@ import urllib.parse
 import urllib.request
 import urllib.response
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, NoReturn, TypeAlias, TypedDict, cast
 
@@ -25,6 +26,7 @@ JSONValue: TypeAlias = (
     str | int | float | bool | list["JSONValue"] | dict[str, "JSONValue"] | None
 )
 JSONObject: TypeAlias = dict[str, JSONValue]
+Dependencies: TypeAlias = dict[tuple[str, str], str]
 MAX_RESPONSE_BYTES = 2_000_000
 MAX_CLASSIFICATION_BYTES = 100_000
 PAGE_SIZE = 100
@@ -271,21 +273,35 @@ def validate_choice(result: JSONValue) -> ReviewDecision:
 def manifest(
     filename: str,
     content: str,
-) -> tuple[JSONObject | None, dict[tuple[str, str], str]]:
+) -> tuple[JSONObject | None, Dependencies]:
     """Extract supported dependency declarations from manifest text."""
-    if filename.endswith("/package.json"):
-        data = json_object(json.loads(content))
-        dependencies = {}
-        for section in (
-            "dependencies",
-            "devDependencies",
-            "optionalDependencies",
-            "peerDependencies",
-        ):
-            for name, version in json_object(data.get(section, {})).items():
-                dependencies[(section, name)] = json_string(version)
-        return data, dependencies
+    name = Path(filename).name
+    if name == "package.json":
+        return package_manifest(content)
+    if name == "requirements.txt":
+        return None, requirement_manifest(content)
+    message = "Unsupported manifest format; human review needed"
+    raise ReviewError(message)
+
+
+def package_manifest(content: str) -> tuple[JSONObject, Dependencies]:
+    """Extract npm declarations while retaining other fields for comparison."""
+    data = json_object(json.loads(content))
     dependencies = {}
+    for section in (
+        "dependencies",
+        "devDependencies",
+        "optionalDependencies",
+        "peerDependencies",
+    ):
+        for name, version in json_object(data.get(section, {})).items():
+            dependencies[(section, name)] = json_string(version)
+    return data, dependencies
+
+
+def requirement_manifest(content: str) -> Dependencies:
+    """Extract exact Python requirements, rejecting unsupported declarations."""
+    dependencies: Dependencies = {}
     for line in content.splitlines():
         if not line.strip() or line.lstrip().startswith("#"):
             continue
@@ -297,7 +313,7 @@ def manifest(
             message = "Unsupported or duplicate requirement; human review needed"
             raise ReviewError(message)
         dependencies[("development-tool", match[1])] = match[2]
-    return None, dependencies
+    return dependencies
 
 
 def dependency_changes(filename: str, before: str, after: str) -> list[JSONObject]:
@@ -338,10 +354,25 @@ def dependency_changes(filename: str, before: str, after: str) -> list[JSONObjec
             },
         )
         if old_doc is not None:
-            old_doc[kind][name] = new_version
-    if old_doc != new_doc or not updates:
+            json_object(old_doc[kind])[name] = new_version
+    # Python equality treats True == 1 and False == 0; JSON types must match too.
+    if (
+        json.dumps(old_doc, sort_keys=True) != json.dumps(new_doc, sort_keys=True)
+        or not updates
+    ):
         message = "Non-version manifest changes or no identifiable updates"
         raise ReviewError(message)
+    if old_doc is None:
+        normalized = before
+        for update in updates:
+            normalized = re.sub(
+                rf"(?m)^({re.escape(update['name'])}==){re.escape(update['before'])}(\s*)$",
+                lambda match, version=update["after"]: match[1] + version + match[2],
+                normalized,
+            )
+        if normalized != after:
+            message = "Non-version manifest changes"
+            raise ReviewError(message)
     return updates
 
 
@@ -479,18 +510,22 @@ def valid_pr(pr: JSONObject, repository: str) -> bool:
 
 @dataclass(frozen=True, kw_only=True)
 class ReviewOptions:
-    """Carry explicit approval switches and the confidence threshold."""
+    """Carry explicit approval switches and independent Jev thresholds."""
 
     dry_run: bool = True
     enabled: bool = False
-    threshold: float = 0.95
+    threshold: float = 0.40
+    min_auto_probability: float = 0.60
+    min_auto_margin: float = 0.20
 
     def validate(self) -> None:
-        """Reject non-boolean switches and invalid confidence thresholds."""
+        """Reject non-boolean switches and invalid Jev thresholds."""
         if (
             type(self.dry_run) is not bool
             or type(self.enabled) is not bool
             or not unit_number(self.threshold)
+            or not unit_number(self.min_auto_probability)
+            or not unit_number(self.min_auto_margin)
         ):
             message = "Invalid approval configuration"
             raise ReviewError(message)
@@ -505,6 +540,19 @@ def initial_report(number: int, options: ReviewOptions) -> JSONObject:
         "dry_run": options.dry_run,
         "auto_approve_enabled": options.enabled,
         "approval_executed": False,
+        "decision": "NOT_CALLED",
+        "confidence": None,
+        "probabilities": None,
+        "auto_margin": None,
+        "auto_candidate": False,
+        "jev_gates": dict.fromkeys(
+            ("decision", "confidence", "auto_probability", "margin"), "NOT_EVALUATED",
+        ),
+        "jev_thresholds": {
+            "confidence": options.threshold,
+            "auto_probability": options.min_auto_probability,
+            "margin": options.min_auto_margin,
+        },
         "checks": {
             "Dependabot PR": "NOT_EVALUATED",
             "Allowed files/metadata": "NOT_EVALUATED",
@@ -541,6 +589,13 @@ def classify_pr(
         reasons=reasons,
         files=[file["filename"] for file in state["files"]],
     )
+    if reasons:
+        report["jev_skip_reason"] = "Deterministic human-review condition matched"
+        return
+    if not key:
+        message = "JEV_API_KEY is not configured"
+        raise ReviewError(message)
+    report["decision"] = "ERROR"
     report.update(classify(state, key))
 
 
@@ -574,10 +629,31 @@ def finish_review(
 ) -> None:
     """Apply model gates and refresh deterministic checks before approval."""
     reasons = report["reasons"]
-    if report["decision"] != "AUTO_APPROVE":
-        reasons.append("Jev requires human review: " + report["decision"])
-    if report["confidence"] < options.threshold:
-        reasons.append("Jev confidence below configured threshold")
+    probabilities = report["probabilities"]
+    # Decimal subtraction preserves inclusive boundaries such as 0.60 - 0.40.
+    margin = Decimal(str(probabilities["AUTO_APPROVE"])) - Decimal(
+        str(probabilities["HUMAN_REVIEW"]),
+    )
+    report["auto_margin"] = float(margin)
+    gates = {
+        "decision": report["decision"] == "AUTO_APPROVE",
+        "confidence": report["confidence"] >= options.threshold,
+        "auto_probability": (
+            probabilities["AUTO_APPROVE"] >= options.min_auto_probability
+        ),
+        "margin": margin > 0 and margin >= Decimal(str(options.min_auto_margin)),
+    }
+    report["jev_gates"] = {
+        name: "PASS" if passed else "FAIL" for name, passed in gates.items()
+    }
+    report["auto_candidate"] = all(gates.values())
+    messages = {
+        "decision": "Jev requires human review: " + report["decision"],
+        "confidence": "Jev confidence below configured threshold",
+        "auto_probability": "Jev AUTO probability below configured threshold",
+        "margin": "Jev AUTO/HUMAN margin insufficient (tie or below configured threshold)",
+    }
+    reasons.extend(messages[name] for name, passed in gates.items() if not passed)
     refresh_approval_checks(
         gh,
         pr,
@@ -631,6 +707,8 @@ def review(
             return report
         validate_pr(pr, gh.repository, config)
         classify_pr(gh, pr, config, key, report)
+        if report["decision"] == "NOT_CALLED":
+            return report
         finish_review(gh, pr, config, report, options)
     except ReviewError as exc:
         report["reasons"].append(str(exc))
@@ -691,7 +769,11 @@ def main() -> None:
             options=ReviewOptions(
                 dry_run=dry_run,
                 enabled=boolean(os.environ.get("ENABLE_AUTO_APPROVE", "false")),
-                threshold=float(os.environ.get("JEV_AUTO_APPROVE_THRESHOLD", "0.95")),
+                threshold=float(os.environ.get("JEV_MIN_CONFIDENCE", "0.40")),
+                min_auto_probability=float(
+                    os.environ.get("JEV_MIN_AUTO_PROBABILITY", "0.60"),
+                ),
+                min_auto_margin=float(os.environ.get("JEV_MIN_AUTO_MARGIN", "0.20")),
             ),
         )
     except (

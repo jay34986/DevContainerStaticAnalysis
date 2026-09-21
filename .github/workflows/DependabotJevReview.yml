@@ -1,5 +1,7 @@
 ---
 name: Dependabot Jev Review
+run-name: >-
+  Dependabot Jev Review PR #${{ github.event.pull_request.number || inputs.pr_number }}
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
@@ -61,4 +63,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JEV_API_KEY: ${{ secrets.JEV_API_KEY }}
           ENABLE_AUTO_APPROVE: ${{ vars.ENABLE_AUTO_APPROVE || 'false' }}
-          JEV_AUTO_APPROVE_THRESHOLD: ${{ vars.JEV_AUTO_APPROVE_THRESHOLD || '0.95' }}
+          JEV_MIN_CONFIDENCE: ${{ vars.JEV_MIN_CONFIDENCE || '0.40' }}
+          JEV_MIN_AUTO_PROBABILITY: ${{ vars.JEV_MIN_AUTO_PROBABILITY || '0.60' }}
+          JEV_MIN_AUTO_MARGIN: ${{ vars.JEV_MIN_AUTO_MARGIN || '0.20' }}
