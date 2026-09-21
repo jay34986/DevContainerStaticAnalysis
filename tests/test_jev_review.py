@@ -599,6 +599,58 @@ class ParsingTests(unittest.TestCase):
                     after,
                 )
 
+    def test_manifest_dispatch_accepts_root_and_nested_paths(self) -> None:
+        """Recognize supported manifests independently of their directory."""
+        for directory in ("", ".devcontainer/"):
+            for name, before, after in (
+                (
+                    "package.json",
+                    '{"devDependencies": {"tool": "1.0.0"}}',
+                    '{"devDependencies": {"tool": "1.0.1"}}',
+                ),
+                ("requirements.txt", "tool==1.0.0\n", "tool==1.0.1\n"),
+            ):
+                with self.subTest(directory=directory, name=name):
+                    updates = j.dependency_changes(directory + name, before, after)
+                    self.assertEqual(len(updates), 1)
+                    self.assertEqual(updates[0]["update_type"], "Patch")
+
+    def test_unsupported_manifest_is_not_parsed_as_requirements(self) -> None:
+        """An allowlist entry alone must not enable an unsupported format."""
+        gh = FakeGitHub()
+        filename = ".devcontainer/tool.conf"
+        gh.files[0]["filename"] = filename
+        config = copy.deepcopy(CONFIG)
+        config["allowed_files"].append(filename)
+        with patch.object(j, "request_json") as request:
+            report = j.review(
+                gh, 190, "fake-key", config,
+                options=j.ReviewOptions(dry_run=False, enabled=True),
+            )
+        self.assertEqual(report["result"], "HUMAN_REVIEW")
+        self.assertIn("Unsupported manifest format; human review needed", report["reasons"])
+        request.assert_not_called()
+        self.assertFalse(gh.approvals)
+
+    def test_package_metadata_type_changes_require_human_review(self) -> None:
+        """Do not hide boolean/number changes behind Python value equality."""
+        for before, after in ((True, 1), (0, False), ([True], [1])):
+            with self.subTest(before=before, after=after), self.assertRaises(j.ReviewError):
+                j.dependency_changes(
+                    "package.json",
+                    json.dumps({"private": before, "dependencies": {"a": "1.0.0"}}),
+                    json.dumps({"private": after, "dependencies": {"a": "1.0.1"}}),
+                )
+
+    def test_package_key_order_and_formatting_do_not_change_metadata(self) -> None:
+        """Permit equivalent JSON formatting alongside an exact upgrade."""
+        updates = j.dependency_changes(
+            "package.json",
+            '{"private": true, "dependencies": {"a": "1.0.0", "b": "2.0.0"}}',
+            '{\n "dependencies": {"b": "2.0.0", "a": "1.0.1"}, "private": true\n}',
+        )
+        self.assertEqual([update["name"] for update in updates], ["a"])
+
     def test_transport_errors_are_sanitized(self) -> None:
         """Verify transport errors are sanitized."""
         for exc in (

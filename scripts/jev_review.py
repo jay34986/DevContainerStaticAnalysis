@@ -26,6 +26,7 @@ JSONValue: TypeAlias = (
     str | int | float | bool | list["JSONValue"] | dict[str, "JSONValue"] | None
 )
 JSONObject: TypeAlias = dict[str, JSONValue]
+Dependencies: TypeAlias = dict[tuple[str, str], str]
 MAX_RESPONSE_BYTES = 2_000_000
 MAX_CLASSIFICATION_BYTES = 100_000
 PAGE_SIZE = 100
@@ -272,21 +273,35 @@ def validate_choice(result: JSONValue) -> ReviewDecision:
 def manifest(
     filename: str,
     content: str,
-) -> tuple[JSONObject | None, dict[tuple[str, str], str]]:
+) -> tuple[JSONObject | None, Dependencies]:
     """Extract supported dependency declarations from manifest text."""
-    if filename.endswith("/package.json"):
-        data = json_object(json.loads(content))
-        dependencies = {}
-        for section in (
-            "dependencies",
-            "devDependencies",
-            "optionalDependencies",
-            "peerDependencies",
-        ):
-            for name, version in json_object(data.get(section, {})).items():
-                dependencies[(section, name)] = json_string(version)
-        return data, dependencies
+    name = Path(filename).name
+    if name == "package.json":
+        return package_manifest(content)
+    if name == "requirements.txt":
+        return None, requirement_manifest(content)
+    message = "Unsupported manifest format; human review needed"
+    raise ReviewError(message)
+
+
+def package_manifest(content: str) -> tuple[JSONObject, Dependencies]:
+    """Extract npm declarations while retaining other fields for comparison."""
+    data = json_object(json.loads(content))
     dependencies = {}
+    for section in (
+        "dependencies",
+        "devDependencies",
+        "optionalDependencies",
+        "peerDependencies",
+    ):
+        for name, version in json_object(data.get(section, {})).items():
+            dependencies[(section, name)] = json_string(version)
+    return data, dependencies
+
+
+def requirement_manifest(content: str) -> Dependencies:
+    """Extract exact Python requirements, rejecting unsupported declarations."""
+    dependencies: Dependencies = {}
     for line in content.splitlines():
         if not line.strip() or line.lstrip().startswith("#"):
             continue
@@ -298,7 +313,7 @@ def manifest(
             message = "Unsupported or duplicate requirement; human review needed"
             raise ReviewError(message)
         dependencies[("development-tool", match[1])] = match[2]
-    return None, dependencies
+    return dependencies
 
 
 def dependency_changes(filename: str, before: str, after: str) -> list[JSONObject]:
@@ -339,8 +354,12 @@ def dependency_changes(filename: str, before: str, after: str) -> list[JSONObjec
             },
         )
         if old_doc is not None:
-            old_doc[kind][name] = new_version
-    if old_doc != new_doc or not updates:
+            json_object(old_doc[kind])[name] = new_version
+    # Python equality treats True == 1 and False == 0; JSON types must match too.
+    if (
+        json.dumps(old_doc, sort_keys=True) != json.dumps(new_doc, sort_keys=True)
+        or not updates
+    ):
         message = "Non-version manifest changes or no identifiable updates"
         raise ReviewError(message)
     if old_doc is None:
