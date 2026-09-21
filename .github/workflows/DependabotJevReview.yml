@@ -1,0 +1,64 @@
+---
+name: Dependabot Jev Review
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches: [develop]
+    types: [opened, synchronize, reopened]
+    paths:
+      - ".devcontainer/package.json"
+      - ".devcontainer/package-lock.json"
+      - ".devcontainer/requirements.txt"
+      - ".devcontainer/bootstrap-requirements.txt"
+      - ".devcontainer/Dockerfile"
+      - ".github/workflows/**"
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Target Dependabot PR number
+        required: true
+        type: number
+      dry_run:
+        description: Run without approving the PR
+        required: true
+        type: boolean
+        default: true
+
+permissions: {}
+
+concurrency:
+  group: jev-review-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Dependabot Jev Review
+    if: >-
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.user.login == 'dependabot[bot]' &&
+       github.event.pull_request.base.ref == 'develop') ||
+      (github.event_name == 'workflow_dispatch' &&
+       github.ref == format('refs/heads/{0}', github.event.repository.default_branch))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      checks: read
+      statuses: read
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout trusted base code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          persist-credentials: "false"
+      - name: Classify and evaluate approval conditions
+        run: python3 -I scripts/jev_review.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JEV_API_KEY: ${{ secrets.JEV_API_KEY }}
+          ENABLE_AUTO_APPROVE: ${{ vars.ENABLE_AUTO_APPROVE || 'false' }}
+          JEV_AUTO_APPROVE_THRESHOLD: ${{ vars.JEV_AUTO_APPROVE_THRESHOLD || '0.95' }}
