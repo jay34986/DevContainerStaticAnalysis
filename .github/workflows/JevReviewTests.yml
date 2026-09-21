@@ -1,0 +1,39 @@
+---
+name: Jev Review Tests
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - "scripts/jev_review.py"
+      - "tests/test_jev_review.py"
+      - "config/jev-review.json"
+      - ".github/workflows/JevReviewTests.yml"
+      - ".github/workflows/DependabotJevReview.yml"
+  push:
+    branches: [develop]
+    paths:
+      - "scripts/jev_review.py"
+      - "tests/test_jev_review.py"
+      - "config/jev-review.json"
+      - ".github/workflows/JevReviewTests.yml"
+      - ".github/workflows/DependabotJevReview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Jev review unit tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: "false"
+      - name: Run offline unit tests
+        run: python3 -m unittest discover -s tests -p 'test_jev_review.py' -v
