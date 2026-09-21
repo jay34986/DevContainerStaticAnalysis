@@ -32,7 +32,9 @@ Actions → Variables の設定（未登録なら初期値を使用）:
 | 変数 | 初期値 | 用途 |
 | --- | --- | --- |
 | `ENABLE_AUTO_APPROVE` | `false` | 分類検証が完了するまで変更しない |
-| `JEV_AUTO_APPROVE_THRESHOLD` | `0.95` | Choice応答のconfidenceの閾値 |
+| `JEV_MIN_CONFIDENCE` | `0.40` | Jev自身の判断の確からしさの下限 |
+| `JEV_MIN_AUTO_PROBABILITY` | `0.60` | AUTOへの相対的支持度の下限 |
+| `JEV_MIN_AUTO_MARGIN` | `0.20` | AUTOとHUMANの確率差の下限 |
 
 ## Phase 1：手動で分類を比較
 
@@ -59,7 +61,7 @@ PR番号、SHA、モデル、分類、confidence、人間の判断、相違理�
 `develop` 向けでPR作成者が `dependabot[bot]` の場合に処理し、GitHub APIの最新情報でも再検証します。
 `paths` は `.devcontainer/` 内の `package.json`、`package-lock.json`、`requirements.txt`、
 `bootstrap-requirements.txt`、`Dockerfile` と `.github/workflows/**` に限定しています。
-Docker / Actions更新も比較用の分類対象に含みますが、自動承認はしません。
+Docker / Actions更新は決定論的precheckでHUMANに確定し、Jev APIを呼びません。
 一つでも対象パスを含むPRでは、対象外ファイルを含む全変更ファイルを承認条件の検証に使用します。
 Dependabotの管理対象ファイルを追加する際は、このフィルターも更新してください。
 手動・自動とも同じPython実装を使用します。`ENABLE_AUTO_APPROVE=false` を維持してください。
@@ -113,7 +115,8 @@ CI完了待ちや `check_suite` による再起動は行いません。CI完了�
 
 ## 判断基準と制約
 
-- Jevが `AUTO_APPROVE` かつconfidenceが閾値以上であること。
+- Jevが `AUTO_APPROVE` かつconfidence、AUTO probability、AUTO−HUMAN marginがそれぞれ閾値以上であること。
+- AUTOとHUMANの同率は、margin閾値を0に設定しても人間確認に回すこと。
 - 同じリポジトリのDependabotによる、openかつ非DraftのPRであること。
 - 許可ファイルのみを変更し、必要な情報が揃っていること。
 - 必須CIがすべて対象SHAで成功していること。
@@ -128,7 +131,7 @@ npmのdependencies / devDependencies等の区分と、このリポジトリで�
 `dependabot/fetch-metadata` を検討しましたが、手動PR指定と自動実行を同じ経路で扱い、
 PRタイトルの推測を避けるため、固定SHAのmanifest比較を採用しました。
 未対応形式やDocker / Actions更新では完全なバージョン情報を保証できません。
-差分・本文を分類材料として渡しますが、メタデータ不足または重要ファイルとして必ず人間に回します。
+メタデータ不足または重要ファイルの場合はJevへの送信前に人間確認へ確定します。
 Docker、DevContainer設定、bootstrap、CI/CD設定はJevの判断にかかわらず承認対象外です。
 
 リリースノート・脆弱性の証拠はPR本文にある情報のみで、リンク先を自動取得したり、
@@ -162,3 +165,72 @@ HTTPはモック化しており、キー、ネットワーク、Dockerは不要�
 - [DependabotとGitHub Actions](https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/automate-dependabot-with-actions)
 - [fetch-metadata](https://github.com/dependabot/fetch-metadata)
 - [ブランチに適用されるruleset](https://docs.github.com/en/rest/repos/rules#get-rules-for-a-branch)
+
+## PoC後のゲートと再評価
+
+旧変数 `JEV_AUTO_APPROVE_THRESHOLD` は使用しません。上記3変数へ移行してください。
+値は0〜1の有限数のみ許可し、不正な設定では承認を停止します。
+confidenceは選択肢probabilityの最大値とは別に扱います。
+Summaryは `confidence`、全 `probabilities`、`auto_margin`、使用した `jev_thresholds`、
+4条件の `jev_gates`（PASS/FAIL）、`auto_candidate` と最終 `result` を出力します。
+API未呼び出し時は `decision: NOT_CALLED`、未取得の数値はnull、ゲートはNOT_EVALUATEDです。
+precheckで除外した場合は `jev_skip_reason: Deterministic human-review condition matched` と具体的理由を表示します。
+API失敗／不正応答時は `decision: ERROR` とし、必ず人間確認へ回します。
+
+`auto_candidate: true` はJevの4条件を満たしたことだけを示します。
+CI未設定やSHA変更などがあれば、候補でも最終結果は `HUMAN_REVIEW` です。
+全ガード通過時のみ、手動dry-runでは `DRY_RUN`、承認無効時は `AUTO_APPROVE_DISABLED` になります。
+実行一覧には `Dependabot Jev Review PR #166` のようにPR番号が表示されます。
+チェック名は循環検知のため `Dependabot Jev Review` のままです。
+
+2026-09-21に実PRのhead/base manifestと変更ファイルを取得し、提示されたPoCスコアを再生しました。
+次の結果は新しいJev API応答ではありません。この作業環境にJEV_API_KEY／GITHUB_TOKENはなく、
+変更後のワークフローをGitHub上で再実行する検証は未実施です。
+取り込み後、上記Phase 1の手順で6 PRを `dry_run=true`、`ENABLE_AUTO_APPROVE=false` のまま再評価してください。
+
+| PR | head SHA（先頭） | confidence | AUTO | HUMAN | margin | AUTO候補 |
+| --- | --- | --- | --- | --- | --- | --- |
+| #166 | 339144fa8654 | 0.51 | 0.67 | 0.31 | 0.36 | Yes |
+| #170 | b74d4de37f54 | 0.22 | 0.48 | 0.48 | 0.00 | No |
+| #184 | bee34910baaa | 0.25 | 0.48 | 0.50 | -0.02 | No |
+| #185 | d0a3e9dc344f | 0.94 | 0.03 | 0.96 | -0.93 | No |
+| #189 | d82a33fefc9c | 0.47 | 0.65 | 0.31 | 0.34 | Yes |
+| #190 | 1fd8215364ed | 0.47 | 0.65 | 0.31 | 0.34 | Yes |
+
+必須CIなしを再現した場合は6件とも最終結果がHUMANです。成功CIを与えた単体テストでは候補3件がDRY_RUNになります。
+PR #170と#184は人間の許容範囲でも、モデルの曖昧さを優先してHUMANへ倒します。
+
+## Required CI調査（設定変更なし）
+
+2026-09-21時点のローカルworkflowと、対象6 PRのhead SHAのcheck-runs／statusesを確認しました。
+全6件で `CodeQL` のcompleted/successが存在し、legacy statusは0件でした。
+例: [#166のhead checks](https://api.github.com/repos/jay34986/DevContainerStaticAnalysis/commits/339144fa8654bded90045bf21dab8f2b6010ca2b/check-runs)。
+CodeQLの発行元App IDは `57789` です。リポジトリ内にはCodeQL workflowがないため、
+設定起源と将来の全依存更新での実行保証までは確認できていません。
+
+| workflow／チェック | 現在の自動起動条件 | Dependabot依存manifest PRの必須候補 |
+| --- | --- | --- |
+| CodeQL | 対象6件のhead上で実行・成功を確認 | 候補。起動設定の確認が必要 |
+| Build and Scan Docker Image with SBOM / build-and-scan | develop push、依存manifest／Dockerfile変更 | PRでは起動しない。PR対応後の本命候補 |
+| Lint and Validate Dockerfile / Hadolint | develop push、Dockerfile変更 | 現状対象外 |
+| Lint and Validate GitHub Actions Workflows / Actionlint, Ghalint | develop push、workflow変更 | 現状対象外 |
+| Lint and Validate Markdown Files / MarkdownLint | develop push、Markdown変更 | 現状対象外 |
+| Lint and Validate Shell Scripts / Shellcheck | develop push、pre-commit変更 | 現状対象外 |
+| Yamllint / Yamllint | develop push、対象YAML変更 | 現状対象外 |
+| Jev Review Tests / Jev review unit tests | 判定コード・設定・関連workflowのPR／develop push | 依存manifestだけでは起動せず、全依存PRには指定不可 |
+| Dependabot Jev Review | develop向け対象パスのPR | 自分自身なので必須指定禁止 |
+
+全ローカルworkflowに手動起動もありますが、手動でベースブランチ上に作った成功はPRのhead CIの代わりになりません。
+現時点で検討できる設定候補は以下です。`config/jev-review.json` の `required_checks: []` は変更していません。
+
+```json
+{"context": "CodeQL", "app_id": 57789}
+```
+
+CodeQLは対象6件でJev承認なしに既に成功しており、観測した実行に循環依存はありません。
+ローカルCIにもJev完了を待つ `needs`／`workflow_run` はありません。
+将来PR対応するbuild-and-scanもJevの結果を待たず独立起動させ、Jevだけがその成功を読む構成としてください。
+CodeQL単独ではnpm等のインストール・実行互換性を検証できないため、自動承認の有効化前には
+Dockerビルド＋TestinfraのPR対応を推奨します。Dependabotの読み取り権限で実行できること、
+対象head SHAに成功チェックが付くこと、変更パスによる未起動がないことを確認した後に必須化してください。
+今回、起動条件・保護設定・Required CI・承認フラグのリモート設定は変更していません。
