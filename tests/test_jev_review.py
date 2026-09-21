@@ -128,7 +128,7 @@ class ReviewTests(unittest.TestCase):
         ).start()
         self.addCleanup(patch.stopall)
 
-    def run_review(self, **kwargs: bool | str) -> j.JSONObject:
+    def run_review(self, **kwargs: bool | str | float) -> j.JSONObject:
         """Evaluate a review with overridable approval settings."""
         return j.review(
             self.gh,
@@ -143,6 +143,7 @@ class ReviewTests(unittest.TestCase):
         report = self.run_review()
         self.assertEqual(report["result"], "APPROVED")
         self.assertEqual(self.gh.approvals[0]["commit_id"], SHA)
+        self.http.assert_called_once()
         url, key, payload = self.http.call_args.args
         self.assertEqual(url, j.JEV_URL)
         self.assertEqual(payload["questions"]["review"]["type"], "choice")
@@ -194,7 +195,7 @@ class ReviewTests(unittest.TestCase):
 
     def test_low_confidence(self) -> None:
         """Verify low confidence."""
-        self.http.return_value["answers"]["review"]["confidence"] = 0.94
+        self.http.return_value["answers"]["review"]["confidence"] = 0.39
         self.assertIn(
             "Jev confidence below configured threshold",
             self.run_review()["reasons"],
@@ -265,8 +266,8 @@ class ReviewTests(unittest.TestCase):
         self.gh.required = [{"context": j.SELF_CHECK}]
         self.assertEqual(self.run_review()["result"], "HUMAN_REVIEW")
 
-    def test_protected_files_and_renames_still_classified(self) -> None:
-        """Verify protected files and renames still classified."""
+    def test_protected_files_and_renames_skip_jev(self) -> None:
+        """Verify protected files and renames never call Jev."""
         for name in (
             ".github/workflows/ci.yml",
             ".github/dependabot.yml",
@@ -280,9 +281,107 @@ class ReviewTests(unittest.TestCase):
             self.gh.files[0]["filename"] = name
             self.assertEqual(self.run_review()["result"], "HUMAN_REVIEW")
             self.assertFalse(self.gh.approvals)
-        self.http.assert_called()
+        self.http.assert_not_called()
         self.gh.files[0] = dict(FILE, previous_filename="evil", status="renamed")
         self.assertEqual(self.run_review()["result"], "HUMAN_REVIEW")
+        self.http.assert_not_called()
+
+    def test_poc_decisions_and_independent_gates(self) -> None:
+        """Replay supplied PoC scores without treating them as live API results."""
+        cases = (
+            (166, "AUTO_APPROVE", 0.51, 0.67, 0.31, True),
+            (170, "AUTO_APPROVE", 0.22, 0.48, 0.48, False),
+            (184, "HUMAN_REVIEW", 0.25, 0.48, 0.50, False),
+            (185, "HUMAN_REVIEW", 0.94, 0.03, 0.96, False),
+            (189, "AUTO_APPROVE", 0.47, 0.65, 0.31, True),
+            (190, "AUTO_APPROVE", 0.47, 0.65, 0.31, True),
+        )
+        for number, decision, confidence, auto, human, expected in cases:
+            with self.subTest(pr=number):
+                self.gh = FakeGitHub()
+                answer = self.http.return_value["answers"]["review"]
+                answer.update(choice=decision, confidence=confidence, probabilities={
+                    "AUTO_APPROVE": auto, "HUMAN_REVIEW": human,
+                    "UNCERTAIN": round(1 - auto - human, 10),
+                })
+                report = self.run_review(dry_run=True, enabled=False)
+                self.assertEqual(report["auto_candidate"], expected)
+                self.assertEqual(report["result"], "DRY_RUN" if expected else "HUMAN_REVIEW")
+                self.assertAlmostEqual(report["auto_margin"], auto - human)
+                self.assertFalse(self.gh.approvals)
+                # CI remains independently required, including in dry-run.
+                self.gh.required = []
+                report = self.run_review(dry_run=True)
+                self.assertEqual(report["auto_candidate"], expected)
+                self.assertEqual(report["result"], "HUMAN_REVIEW")
+
+    def test_threshold_boundaries_and_individual_failures(self) -> None:
+        """Require each inclusive threshold and reject ties even with zero margin."""
+        cases = (
+            (0.40, 0.60, 0.40, {}, None),
+            (0.399999, 0.65, 0.31, {}, "confidence"),
+            (0.40, 0.599999, 0.30, {}, "auto_probability"),
+            (0.40, 0.60, 0.300001, {"min_auto_margin": 0.30}, "margin"),
+            (0.90, 0.48, 0.48, {"min_auto_probability": 0.40}, "margin"),
+            (0.90, 0.50, 0.50, {"min_auto_probability": 0.40, "min_auto_margin": 0}, "margin"),
+            (0.50, 0.70, 0.30, {"threshold": 0.51}, "confidence"),
+            (0.50, 0.70, 0.30, {"min_auto_probability": 0.71}, "auto_probability"),
+            (0.50, 0.70, 0.30, {"min_auto_margin": 0.41}, "margin"),
+        )
+        for confidence, auto, human, options, failure in cases:
+            with self.subTest(failure=failure, options=options):
+                self.gh = FakeGitHub()
+                self.http.return_value["answers"]["review"].update(
+                    confidence=confidence, probabilities={
+                        "AUTO_APPROVE": auto, "HUMAN_REVIEW": human,
+                        "UNCERTAIN": max(0, round(1 - auto - human, 10)),
+                    },
+                )
+                report = self.run_review(dry_run=True, **options)
+                self.assertEqual(report["auto_candidate"], failure is None)
+                self.assertEqual(report["result"], "DRY_RUN" if failure is None else "HUMAN_REVIEW")
+                if failure:
+                    self.assertEqual(report["jev_gates"][failure], "FAIL")
+                self.assertFalse(self.gh.approvals)
+
+    def test_invalid_thresholds_skip_jev(self) -> None:
+        """Fail closed on malformed or non-finite policy values."""
+        for name in ("threshold", "min_auto_probability", "min_auto_margin"):
+            for value in (True, "0.4", -0.1, 1.1, float("nan"), float("inf")):
+                with self.subTest(name=name, value=value):
+                    self.assertEqual(self.run_review(**{name: value})["result"], "HUMAN_REVIEW")
+        self.http.assert_not_called()
+
+    def test_manifest_prechecks_skip_jev(self) -> None:
+        """Reject incomplete metadata and every unsupported manifest change before Jev."""
+        for after in (
+            "uv==0.11.0\n", "uv>=0.11.2\n", "uv==0.11.2\npip==26.1.0\n",
+            "", "uv==0.11.1\n", "# new comment\nuv==0.11.2\n",
+        ):
+            with self.subTest(after=after), patch.object(
+                self.gh, "content", side_effect=["uv==0.11.1\n", after],
+            ):
+                report = self.run_review()
+                self.assertEqual(report["decision"], "NOT_CALLED")
+                self.assertEqual(report["result"], "HUMAN_REVIEW")
+        self.gh.files[0]["filename"] = ".devcontainer/package.json"
+        with patch.object(self.gh, "content", side_effect=[
+            '{"dependencies":{"x":"1.0.0"},"scripts":{"test":"safe"}}',
+            '{"dependencies":{"x":"1.0.1"},"scripts":{"test":"changed"}}',
+        ]):
+            self.assertEqual(self.run_review()["decision"], "NOT_CALLED")
+        with patch.object(self.gh, "content", side_effect=j.ReviewError("Missing manifest content")):
+            self.assertEqual(self.run_review()["decision"], "NOT_CALLED")
+        self.http.assert_not_called()
+
+    def test_mixed_allowed_and_human_files_skip_jev(self) -> None:
+        """One human-review file excludes the entire otherwise eligible PR."""
+        self.gh.files.append(dict(FILE, filename=".devcontainer/Dockerfile"))
+        self.gh.pr["changed_files"] = 2
+        report = self.run_review()
+        self.assertEqual(report["decision"], "NOT_CALLED")
+        self.assertIn("Deterministic human-review", report["jev_skip_reason"])
+        self.http.assert_not_called()
 
     def test_sha_changes_during_evaluation_and_before_approval(self) -> None:
         """Verify sha changes during evaluation and before approval."""
@@ -358,6 +457,35 @@ class ReviewTests(unittest.TestCase):
 
 class ParsingTests(unittest.TestCase):
     """Verify input parsing and transport failures without credentials."""
+
+    def test_main_reads_independent_threshold_variables(self) -> None:
+        """Pass Actions Variables through to the review policy and keep approval off."""
+        with tempfile.TemporaryDirectory() as directory:
+            event = Path(directory) / "event.json"
+            event.write_text(json.dumps({
+                "inputs": {"pr_number": "166", "dry_run": "true"},
+            }))
+            environment = {
+                "GITHUB_EVENT_PATH": str(event),
+                "GITHUB_EVENT_NAME": "workflow_dispatch",
+                "GITHUB_REPOSITORY": "owner/repo",
+                "GITHUB_TOKEN": "fake-token",
+                "JEV_MIN_CONFIDENCE": "0.45",
+                "JEV_MIN_AUTO_PROBABILITY": "0.70",
+                "JEV_MIN_AUTO_MARGIN": "0.30",
+            }
+            with (
+                patch.dict(os.environ, environment, clear=True),
+                patch.object(j, "review", return_value={}) as review,
+                patch.object(j, "write_summary"),
+            ):
+                j.main()
+            self.assertEqual(
+                review.call_args.kwargs["options"],
+                j.ReviewOptions(
+                    threshold=0.45, min_auto_probability=0.70, min_auto_margin=0.30,
+                ),
+            )
 
     def test_summary_file_for_invalid_configuration(self) -> None:
         """Write a human-review summary without exposing configuration secrets."""
