@@ -5,6 +5,6 @@
     "npm": "11.16.0",
     "markdownlint-cli2": "0.22.1",
     "secretlint": "13.0.2",
-    "@secretlint/secretlint-rule-preset-recommend": "13.0.2"
+    "@secretlint/secretlint-rule-preset-recommend": "13.0.5"
   }
 }
