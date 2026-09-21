@@ -108,3 +108,11 @@ Click "Open a Remote Window" in the bottom left corner of VS Code.
 Click "Reopen in Container".
 
 ![Reopen in Container](./images/VSCode_image_03.png)
+
+## Dependabot PR Review with Jev
+
+JevによるDependabot PRの分類と、条件付き承認のワークフローを利用できます。
+**初期状態では自動承認は無効**です。まず手動実行の `dry_run: true` で分類結果を比較してください。
+
+Secretsの登録、手動・自動実行、CI条件、承認の有効化と制約は
+[運用手順](docs/jev-review.md)を参照してください。

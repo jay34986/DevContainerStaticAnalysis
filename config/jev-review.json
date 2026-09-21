@@ -1,0 +1,17 @@
+{
+  "trusted_base_branches": ["develop"],
+  "allowed_files": [
+    ".devcontainer/package.json",
+    ".devcontainer/requirements.txt"
+  ],
+  "human_review_files": [
+    ".github/workflows/**",
+    ".github/dependabot.yml",
+    ".devcontainer/devcontainer.json",
+    ".devcontainer/bootstrap-requirements.txt",
+    ".devcontainer/Dockerfile",
+    "Dockerfile",
+    "**/Dockerfile"
+  ],
+  "required_checks": []
+}
