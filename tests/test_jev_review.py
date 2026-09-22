@@ -60,18 +60,6 @@ class FakeGitHub(j.GitHub):
         """Initialize independent mutable API fixtures."""
         self.pr = copy.deepcopy(PR)
         self.files = [copy.deepcopy(FILE)]
-        self.required = [{"context": "test", "app_id": 15368}]
-        self.runs = [
-            {
-                "name": "test",
-                "app": {"id": 15368},
-                "head_sha": SHA,
-                "status": "completed",
-                "conclusion": "success",
-            },
-        ]
-        self.statuses = []
-        self.rules = []
         self.approvals = []
         self.reads = 0
         self.change_at = None
@@ -90,24 +78,12 @@ class FakeGitHub(j.GitHub):
             if self.change_at and self.reads >= self.change_at:
                 result["head"]["sha"] = "c" * 40
             return result
-        if path.startswith("branches/"):
-            return {
-                "protection": {
-                    "required_status_checks": {"checks": self.required, "contexts": []},
-                },
-            }
         raise AssertionError(path)
 
     def pages(self, path: str, key: str | None = None) -> list[j.JSONObject]:
         """Return fixture records for the requested endpoint."""
         if "/files" in path:
             return self.files
-        if "/check-runs" in path:
-            return self.runs
-        if "/statuses" in path:
-            return self.statuses
-        if path.startswith("rules/"):
-            return self.rules
         raise AssertionError(path)
 
     def content(self, filename: str, sha: str) -> str:
@@ -218,53 +194,25 @@ class ReviewTests(unittest.TestCase):
             self.http.return_value = response
             self.assertEqual(self.run_review()["result"], "HUMAN_REVIEW")
 
-    def test_failed_pending_cancelled_skipped_and_missing_ci(self) -> None:
-        """Verify failed pending cancelled skipped and missing ci."""
-        for conclusion in ("failure", "cancelled", "skipped", "neutral", None):
-            self.gh.runs[0]["conclusion"] = conclusion
-            self.assertEqual(self.run_review()["result"], "HUMAN_REVIEW")
-            self.assertFalse(self.gh.approvals)
-        self.gh.runs = []
-        self.assertEqual(self.run_review()["result"], "HUMAN_REVIEW")
-        self.gh.required = []
-        self.assertIn(
-            "No required CI checks configured or discovered",
-            self.run_review()["reasons"],
-        )
-
-    def test_app_identity_and_duplicate_checks(self) -> None:
-        """Verify app identity and duplicate checks."""
-        self.gh.runs[0]["app"]["id"] = 42
-        self.assertEqual(self.run_review()["result"], "HUMAN_REVIEW")
-        self.gh = FakeGitHub()
-        self.gh.runs *= 2
-        self.assertEqual(self.run_review()["result"], "HUMAN_REVIEW")
-
-    def test_classic_status_and_ruleset(self) -> None:
-        """Verify classic status and ruleset."""
-        self.gh.required = []
-        self.gh.rules = [
-            {
-                "type": "required_status_checks",
-                "parameters": {
-                    "required_status_checks": [
-                        {"context": "legacy", "integration_id": None},
-                    ],
-                },
-            },
-        ]
-        self.gh.statuses = [
-            {"context": "legacy", "state": "pending"},
-            {"context": "legacy", "state": "success"},
-        ]
-        self.assertEqual(self.run_review()["result"], "HUMAN_REVIEW")
-        self.gh.statuses.pop(0)
-        self.assertEqual(self.run_review()["result"], "APPROVED")
-
-    def test_circular_dependency(self) -> None:
-        """Verify circular dependency."""
-        self.gh.required = [{"context": j.SELF_CHECK}]
-        self.assertEqual(self.run_review()["result"], "HUMAN_REVIEW")
+    def test_no_ci_is_required_but_sha_is_checked(self) -> None:
+        """No CI endpoints exist in the fake; PR identity must still be refreshed."""
+        for options, expected, reads in (
+            ({"dry_run": True}, "DRY_RUN", 2),
+            ({"enabled": False}, "AUTO_APPROVE_DISABLED", 2),
+            ({"dry_run": True, "enabled": False}, "DRY_RUN", 2),
+            ({}, "APPROVED", 3),
+        ):
+            with self.subTest(options=options):
+                self.gh = FakeGitHub()
+                report = self.run_review(**options)
+                self.assertTrue(report["auto_candidate"])
+                self.assertEqual(report["result"], expected)
+                self.assertEqual(report["checks"], {
+                    "Dependabot PR": "PASS", "Allowed files/metadata": "PASS",
+                    "CI": "NOT_REQUIRED", "Commit SHA": "PASS",
+                })
+                self.assertEqual(self.gh.reads, reads)
+                self.assertEqual(bool(self.gh.approvals), expected == "APPROVED")
 
     def test_protected_files_and_renames_skip_jev(self) -> None:
         """Verify protected files and renames never call Jev."""
@@ -309,11 +257,8 @@ class ReviewTests(unittest.TestCase):
                 self.assertEqual(report["result"], "DRY_RUN" if expected else "HUMAN_REVIEW")
                 self.assertAlmostEqual(report["auto_margin"], auto - human)
                 self.assertFalse(self.gh.approvals)
-                # CI remains independently required, including in dry-run.
-                self.gh.required = []
-                report = self.run_review(dry_run=True)
-                self.assertEqual(report["auto_candidate"], expected)
-                self.assertEqual(report["result"], "HUMAN_REVIEW")
+                self.assertEqual(report["checks"]["CI"], "NOT_REQUIRED")
+                self.assertEqual(report["checks"]["Commit SHA"], "PASS")
 
     def test_threshold_boundaries_and_individual_failures(self) -> None:
         """Require each inclusive threshold and reject ties even with zero margin."""
@@ -415,32 +360,67 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual(self.run_review()["result"], "HUMAN_REVIEW")
         self.assertFalse(self.gh.approvals)
 
-    def test_ci_failure_on_final_refresh(self) -> None:
-        """Verify ci failure on final refresh."""
-        original = self.gh.pages
-        calls = 0
-        final_refresh = 2
+    def test_missing_or_truncated_diff_skips_jev(self) -> None:
+        """Missing patches and incomplete file lists stop before classification."""
+        for missing_patch in (True, False):
+            self.gh = FakeGitHub()
+            if missing_patch:
+                self.gh.files[0].pop("patch")
+            else:
+                self.gh.pr["changed_files"] = 2
+            report = self.run_review()
+            self.assertEqual(report["result"], "HUMAN_REVIEW")
+            self.assertEqual(report["decision"], "NOT_CALLED")
+            self.assertFalse(self.gh.approvals)
+        self.http.assert_not_called()
 
-        def pages(path: str, key: str | None = None) -> list[j.JSONObject]:
-            """Return fixture records for the requested endpoint."""
-            nonlocal calls
-            if "/check-runs" in path:
-                calls += 1
-                if calls == final_refresh:
-                    self.gh.runs[0]["conclusion"] = "failure"
-            return original(path, key)
+    def test_pr_identity_changes_stop_review(self) -> None:
+        """Recheck every identity field after classification and before approval."""
+        changes = (
+            ("state", None, "closed"), ("draft", None, True),
+            ("user", "login", "human"), ("user", "type", "User"),
+            ("head", "sha", "c" * 40), ("base", "sha", "c" * 40),
+            ("base", "ref", "main"),
+            ("head", "repo", {"full_name": "fork/repo"}),
+            ("base", "repo", {"full_name": "other/repo"}),
+        )
+        for field, nested, value in changes:
+            for at, options in ((2, {"dry_run": True}), (2, {"enabled": False}), (3, {})):
+                with self.subTest(field=field, nested=nested, at=at, options=options):
+                    self.gh = FakeGitHub()
+                    original = self.gh.get
 
-        self.gh.pages = pages
-        report = self.run_review()
-        self.assertEqual(report["result"], "HUMAN_REVIEW")
-        self.assertEqual(report["checks"]["CI"], "FAIL")
-        self.assertFalse(self.gh.approvals)
+                    def get(path: str, payload: j.JSONValue = None) -> j.JSONValue:
+                        result = original(path, payload)
+                        if self.gh.reads >= at:
+                            if nested is None:
+                                result[field] = value
+                            else:
+                                result[field][nested] = value
+                        return result
+
+                    with patch.object(self.gh, "get", side_effect=get):
+                        report = self.run_review(**options)
+                    self.assertEqual(report["result"], "HUMAN_REVIEW")
+                    self.assertEqual(report["checks"]["Commit SHA"], "FAIL")
+                    self.assertFalse(self.gh.approvals)
+
+    def test_pr_refresh_failure_stops_approval(self) -> None:
+        """A failed PR reread cannot bypass the final guard."""
+        for at in (2, 3):
+            self.gh = FakeGitHub()
+            with patch.object(self.gh, "get", side_effect=[
+                *[copy.deepcopy(PR) for _ in range(at - 1)],
+                j.ReviewError("API HTTP error 403"),
+            ]):
+                report = self.run_review()
+            self.assertEqual(report["result"], "HUMAN_REVIEW")
+            self.assertFalse(self.gh.approvals)
 
     def test_latest_head_is_reclassified(self) -> None:
         """Verify latest head is reclassified."""
         latest = "d" * 40
         self.gh.pr["head"]["sha"] = latest
-        self.gh.runs[0]["head_sha"] = latest
         self.assertEqual(self.run_review()["result"], "APPROVED")
         self.assertEqual(self.http.call_args.args[2]["state"]["head_sha"], latest)
         self.assertEqual(self.gh.approvals[0]["commit_id"], latest)

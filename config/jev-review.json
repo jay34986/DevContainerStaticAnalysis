@@ -12,6 +12,5 @@
     ".devcontainer/Dockerfile",
     "Dockerfile",
     "**/Dockerfile"
-  ],
-  "required_checks": []
+  ]
 }
