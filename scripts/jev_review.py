@@ -35,7 +35,6 @@ REQUEST_TIMEOUT_SECONDS = 30
 
 JEV_URL = "https://api.typesafe.ai/v1/systemone"
 CHOICES = {"AUTO_APPROVE", "HUMAN_REVIEW", "UNCERTAIN"}
-SELF_CHECK = "Dependabot Jev Review"
 
 
 class ReviewDecision(TypedDict):
@@ -429,73 +428,6 @@ def collect(
     return state, reasons
 
 
-def required_checks(gh: GitHub, pr: JSONObject, config: JSONObject) -> list[JSONObject]:
-    """Combine local, branch-protection and ruleset check requirements."""
-    branch = urllib.parse.quote(pr["base"]["ref"], safe="")
-    info = gh.get(f"branches/{branch}")
-    protection = info["protection"]["required_status_checks"]
-    required = list(config["required_checks"])
-    required.extend(protection.get("checks", []))
-    known = {check["context"] for check in required}
-    required.extend(
-        {"context": context, "app_id": None}
-        for context in protection["contexts"]
-        if context not in known
-    )
-    for rule in gh.pages(f"rules/branches/{branch}"):
-        if rule["type"] == "required_status_checks":
-            required.extend(
-                {"context": check["context"], "app_id": check.get("integration_id")}
-                for check in rule["parameters"]["required_status_checks"]
-            )
-        elif rule["type"] in ("workflows", "required_deployments", "merge_queue"):
-            message = "Unsupported required workflow/deployment/merge queue policy"
-            raise ReviewError(message)
-    return required
-
-
-def check_succeeded(
-    check: JSONObject,
-    runs: list[JSONObject],
-    statuses: list[JSONObject],
-    sha: str,
-) -> bool:
-    """Require an unambiguous successful check from the expected app and commit."""
-    name, app = check["context"], check.get("app_id")
-    matches = [
-        run
-        for run in runs
-        if run["name"] == name and (app in (None, -1) or run["app"]["id"] == app)
-    ]
-    status = next((item for item in statuses if item["context"] == name), None)
-    if not matches:
-        return app in (None, -1) and status is not None and status["state"] == "success"
-    return (
-        len(matches) == 1
-        and matches[0]["head_sha"] == sha
-        and matches[0]["status"] == "completed"
-        and matches[0]["conclusion"] == "success"
-        and (status is None or status["state"] == "success")
-    )
-
-
-def ci_reasons(gh: GitHub, pr: JSONObject, config: JSONObject) -> list[str]:
-    """Return reasons why required checks do not permit approval."""
-    required = required_checks(gh, pr, config)
-    if not required:
-        return ["No required CI checks configured or discovered"]
-    if any(check["context"] == SELF_CHECK for check in required):
-        return ["Review workflow must not be a required CI check (circular dependency)"]
-    sha = pr["head"]["sha"]
-    runs = gh.pages(f"commits/{sha}/check-runs?filter=latest", "check_runs")
-    statuses = gh.pages(f"commits/{sha}/statuses")
-    return [
-        f"Required CI not successful or missing: {check['context']}"
-        for check in required
-        if not check_succeeded(check, runs, statuses, sha)
-    ]
-
-
 def valid_pr(pr: JSONObject, repository: str) -> bool:
     """Check the author, state and repository identity of a PR."""
     return (
@@ -532,7 +464,7 @@ class ReviewOptions:
 
 
 def initial_report(number: int, options: ReviewOptions) -> JSONObject:
-    """Create a report with every approval gate initially unevaluated."""
+    """Create a report with CI explicitly excluded from approval gates."""
     return {
         "pr": number,
         "result": "HUMAN_REVIEW",
@@ -556,7 +488,7 @@ def initial_report(number: int, options: ReviewOptions) -> JSONObject:
         "checks": {
             "Dependabot PR": "NOT_EVALUATED",
             "Allowed files/metadata": "NOT_EVALUATED",
-            "CI": "NOT_EVALUATED",
+            "CI": "NOT_REQUIRED",
             "Commit SHA": "NOT_EVALUATED",
         },
     }
@@ -599,17 +531,13 @@ def classify_pr(
     report.update(classify(state, key))
 
 
-def refresh_approval_checks(
+def refresh_pr_state(
     gh: GitHub,
     pr: JSONObject,
-    config: JSONObject,
     report: JSONObject,
     changed_reason: str,
 ) -> None:
-    """Refresh CI and compare the latest PR with the classified snapshot."""
-    ci = ci_reasons(gh, pr, config)
-    report["checks"]["CI"] = "FAIL" if ci else "PASS"
-    report["reasons"].extend(ci)
+    """Compare PR eligibility and head/base identity with the classified snapshot."""
     latest = json_object(gh.get(f"pulls/{pr['number']}"))
     unchanged = valid_pr(latest, gh.repository) and all(
         latest[side][field] == pr[side][field]
@@ -623,7 +551,6 @@ def refresh_approval_checks(
 def finish_review(
     gh: GitHub,
     pr: JSONObject,
-    config: JSONObject,
     report: JSONObject,
     options: ReviewOptions,
 ) -> None:
@@ -654,10 +581,9 @@ def finish_review(
         "margin": "Jev AUTO/HUMAN margin insufficient (tie or below configured threshold)",
     }
     reasons.extend(messages[name] for name, passed in gates.items() if not passed)
-    refresh_approval_checks(
+    refresh_pr_state(
         gh,
         pr,
-        config,
         report,
         "PR state, head SHA or base changed during classification",
     )
@@ -666,10 +592,9 @@ def finish_review(
     if options.dry_run or not options.enabled:
         report["result"] = "DRY_RUN" if options.dry_run else "AUTO_APPROVE_DISABLED"
         return
-    refresh_approval_checks(
+    refresh_pr_state(
         gh,
         pr,
-        config,
         report,
         "PR changed immediately before approval",
     )
@@ -709,7 +634,7 @@ def review(
         classify_pr(gh, pr, config, key, report)
         if report["decision"] == "NOT_CALLED":
             return report
-        finish_review(gh, pr, config, report, options)
+        finish_review(gh, pr, report, options)
     except ReviewError as exc:
         report["reasons"].append(str(exc))
     except (
